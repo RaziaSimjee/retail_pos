@@ -1,0 +1,26 @@
+{
+  "name": "apigateway",
+  "version": "1.0.0",
+  "description": "Api Gateway",
+  "license": "ISC",
+  "author": "Razia Simjee",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-http-proxy": "^2.1.1",
+    "helmet": "^8.1.0",
+    "http-proxy-middleware": "^3.0.5",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "dotenv": "^17.0.0",
+    "nodemon": "^3.1.10"
+  }
+}
