@@ -1,98 +1,98 @@
 import React, { useState } from "react";
 import FloatingAddButton from "../components/FloatingAddButton.jsx";
 import {
-  useGetBrandsQuery,
-  useDeleteBrandMutation,
-  useUpdateBrandMutation,
-  useCreateBrandMutation,
-} from "../slices/brandApiSlice.js";
-import BrandModal from "../components/BrandModal.jsx";
+  useGetColorsQuery,
+  useDeleteColorMutation,
+  useUpdateColorMutation,
+  useCreateColorMutation,
+} from "../slices/colorApiSlice.js";
+import ColorModal from "../components/ColorModal.jsx";
 
-const BrandsAdminScreen = () => {
-  const { data, isLoading, isError, refetch } = useGetBrandsQuery({
+const ColorsAdminScreen = () => {
+  const { data, isLoading, isError, refetch } = useGetColorsQuery({
     skip: 0,
     take: 100,
   });
 
-  const [deleteBrand, { isLoading: isDeleting }] = useDeleteBrandMutation();
-  const [updateBrand, { isLoading: isUpdating }] = useUpdateBrandMutation();
-  const [createBrand, { isLoading: isCreating }] = useCreateBrandMutation();
+  const [deleteColor, { isLoading: isDeleting }] = useDeleteColorMutation();
+  const [updateColor, { isLoading: isUpdating }] = useUpdateColorMutation();
+  const [createColor, { isLoading: isCreating }] = useCreateColorMutation();
 
   const [modalMode, setModalMode] = useState(null); // "add" | "edit" | null
-  const [currentBrand, setCurrentBrand] = useState(null);
+  const [currentColor, setCurrentColor] = useState(null);
 
-  const emptyBrand = {
-    brandName: "",
+  const emptyColor = {
+    colorName: "",
     imageURL: "",
     description: "",
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this brand?")) {
+    if (window.confirm("Are you sure you want to delete this color?")) {
       try {
-        await deleteBrand({ id }).unwrap();
+        await deleteColor({ id }).unwrap();
         refetch();
-        alert("Brand deleted successfully!");
+        alert("Color deleted successfully!");
       } catch (error) {
-        console.error("Failed to delete the brand:", error);
-        alert("Failed to delete the brand.");
+        console.error("Failed to delete the color:", error);
+        alert("Failed to delete the color.");
       }
     }
   };
 
-  const handleEdit = (brand) => {
-    setCurrentBrand(brand);
+  const handleEdit = (color) => {
+    setCurrentColor(color);
     setModalMode("edit");
   };
 
   const handleAdd = () => {
-    setCurrentBrand(emptyBrand);
+    setCurrentColor(emptyColor);
     setModalMode("add");
   };
 
   const handleModalSubmit = async (formData) => {
     try {
       if (modalMode === "add") {
-        await createBrand(formData).unwrap();
-        alert("Brand created successfully!");
+        await createColor(formData).unwrap();
+        alert("Color created successfully!");
       } else {
-        await updateBrand({
-          id: currentBrand.brandID,
+        await updateColor({
+          id: currentColor.colorID,
           ...formData,
         }).unwrap();
-        alert("Brand updated successfully!");
+        alert("Color updated successfully!");
       }
       refetch();
       setModalMode(null);
     } catch (error) {
-      console.error("Error saving brand:", error);
-      alert("Failed to save brand.");
+      console.error("Error saving color:", error);
+      alert("Failed to save color.");
     }
   };
 
   if (isLoading)
-    return <p className="text-center mt-4 text-gray-400">Loading brands...</p>;
+    return <p className="text-center mt-4 text-gray-400">Loading colors...</p>;
   if (isError)
     return (
-      <p className="text-center mt-4 text-red-500">Failed to load brands</p>
+      <p className="text-center mt-4 text-red-500">Failed to load colors</p>
     );
 
   return (
     <div className="relative p-6 bg-gray-50 min-h-screen">
       {!modalMode && <FloatingAddButton onClick={handleAdd} />}
 
-      <h1 className="text-4xl font-bold mb-8 text-gray-900">Brands</h1>
+      <h1 className="text-4xl font-bold mb-8 text-gray-900">Colors</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {data?.map((brand) => (
+        {data?.map((color) => (
           <div
-            key={brand.brandID}
+            key={color.colorID}
             className="flex flex-col bg-white rounded-3xl shadow-md hover:shadow-xl transition overflow-hidden border-2 border-gray-200 hover:border-blue-400"
           >
             <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
               <img
-                src={brand.imageURL || "https://via.placeholder.com/300x200"}
-                alt={brand.brandName}
+                src={color.imageURL || "https://via.placeholder.com/300x200"}
+                alt={color.colorName}
                 onError={(e) => {
                   if (e.target.src !== "https://via.placeholder.com/300x200") {
                     e.target.src = "https://via.placeholder.com/300x200";
@@ -105,25 +105,23 @@ const BrandsAdminScreen = () => {
             <div className="p-5 flex-1 flex flex-col justify-between">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 flex justify-between items-center">
-                  <span>{brand.brandName}</span>
-                  <span className="text-sm font-thin text-gray-400">
-                    ID: {brand.brandID}
-                  </span>
+                  {color.colorName}
+                  <span className="text-sm font-thin text-gray-400">ID: {color.colorID}</span>
                 </h2>
                 <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                  {brand.description}
+                  {color.description}
                 </p>
               </div>
 
               <div className="flex gap-2 mt-3">
                 <button
-                  onClick={() => handleEdit(brand)}
+                  onClick={() => handleEdit(color)}
                   className="flex-1 bg-blue-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-blue-600 transition font-medium"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(brand.brandID)}
+                  onClick={() => handleDelete(color.colorID)}
                   disabled={isDeleting}
                   className="flex-1 bg-red-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-red-600 transition font-medium disabled:opacity-50"
                 >
@@ -136,9 +134,9 @@ const BrandsAdminScreen = () => {
       </div>
 
       {modalMode && (
-        <BrandModal
+        <ColorModal
           mode={modalMode}
-          brand={currentBrand}
+          color={currentColor}
           onClose={() => setModalMode(null)}
           onSubmit={handleModalSubmit}
           isLoading={modalMode === "add" ? isCreating : isUpdating}
@@ -148,4 +146,4 @@ const BrandsAdminScreen = () => {
   );
 };
 
-export default BrandsAdminScreen;
+export default ColorsAdminScreen;

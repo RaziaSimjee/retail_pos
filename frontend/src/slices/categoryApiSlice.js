@@ -1,5 +1,5 @@
-import { apiSlice } from './apiSlice';
-import { API_GATEWAY_URL } from '../constants';
+import { apiSlice } from "./apiSlice";
+import { API_GATEWAY_URL } from "../constants";
 export const categorySlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getCategories: builder.query({
@@ -11,26 +11,41 @@ export const categorySlice = apiSlice.injectEndpoints({
     createCategory: builder.mutation({
       query: (payload) => ({
         url: `${API_GATEWAY_URL}/productcatalog/categories`,
-        method: 'POST',
+        method: "POST",
         body: payload,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }),
-      invalidatesTags: ['Category'],
+      invalidatesTags: ["Category"],
+    }),
+    updateCategory: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/categories/${id}`,
+        method: "PUT",
+        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      invalidatesTags: ["Category"],
     }),
     deleteCategory: builder.mutation({
       query: ({ id }) => ({
         url: `${API_GATEWAY_URL}/productcatalog/categories/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }),
-      invalidatesTags: [{ type: 'Category' }],
+      invalidatesTags: [{ type: "Category" }],
     }),
   }),
 });
 
-export const { useGetCategoriesQuery, useCreateCategoryMutation, useDeleteCategoryMutation } =
-  categorySlice;
+export const {
+  useGetCategoriesQuery,
+  useCreateCategoryMutation,
+  useUpdateCategoryMutation,
+  useDeleteCategoryMutation,
+} = categorySlice;

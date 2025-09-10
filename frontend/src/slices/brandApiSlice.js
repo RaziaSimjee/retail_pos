@@ -19,6 +19,17 @@ export const brandSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Brand'],
     }),
+    updateBrand: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/brands/${id}`,
+        method: 'PUT',
+        body: data,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+      invalidatesTags: ['Brand'],
+    }),
     deleteBrand: builder.mutation({
       query: ({id = 0}) => ({
         url: `${API_GATEWAY_URL}/productcatalog/brands/${id}`,
@@ -34,5 +45,6 @@ export const brandSlice = apiSlice.injectEndpoints({
 export const {
   useGetBrandsQuery,
   useCreateBrandMutation,
+  useUpdateBrandMutation,
   useDeleteBrandMutation,
 } = brandSlice;

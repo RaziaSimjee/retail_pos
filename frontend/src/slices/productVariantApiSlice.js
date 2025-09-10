@@ -1,24 +1,58 @@
-import { apiSlice } from './apiSlice';
-import { API_GATEWAY_URL } from '../constants';
+import { apiSlice } from "./apiSlice";
+import { API_GATEWAY_URL } from "../constants";
+
 export const productVariantSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getProductVariants: builder.query({
-      query: () => ({
-        url: 'http://localhost:5000/productvariants/0/100',
+      query: ({ skip = 0, take = 100 } = {}) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/productvariants/${skip}/${take}`,
       }),
       keepUnusedDataFor: 5,
+      providesTags: ["ProductVariants"],
+    }),
+    getProductVariantsById: builder.query({
+      query: (id) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/productvariants/${id}`,
+      }),
+      keepUnusedDataFor: 5,
+      providesTags: (result, error, id) => [{ type: "ProductVariants", id }],
     }),
     createProductVariant: builder.mutation({
       query: (payload) => ({
         url: `${API_GATEWAY_URL}/productcatalog/productvariants`,
-        method: 'POST',
+        method: "POST",
         body: payload,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }),
-      invalidatesTags: ['ProductVariants'],
+      invalidatesTags: ["ProductVariants"],
+    }),
+    updateProductVariant: builder.mutation({
+      query: (payload) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/productvariants/${payload.id}`,
+        method: "PUT",
+        body: payload,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      invalidatesTags: ["ProductVariants"],
+    }),
+    deleteProductVariant: builder.mutation({
+      query: (id) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/productvariants/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["ProductVariants"],
     }),
   }),
 });
-export const { useGetProductVariantsQuery, useCreateProductVariantMutation } = productVariantSlice;
+
+export const {
+  useGetProductVariantsQuery,
+  useGetProductVariantsByIdQuery,
+  useCreateProductVariantMutation,
+  useUpdateProductVariantMutation,
+  useDeleteProductVariantMutation,
+} = productVariantSlice;
