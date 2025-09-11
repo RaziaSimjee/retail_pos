@@ -18,32 +18,42 @@ import BrandsAdminScreen from "./screens/BrandsAdminScreen.jsx";
 import CategoriesAdminScreen from "./screens/CategoriesAdminScreen.jsx";
 import ColorsAdminScreen from "./screens/ColorsAdminScreen.jsx";
 import ProductSizesAdminScreen from "./screens/ProductSizesAdminScreen.jsx";
+import UsersAdminScreen from "./screens/UsersAdminScreen.jsx";
 import NotFoundScreen from "./screens/NotFoundScreen.jsx";
 // Components
 import ProductDetails from "./components/ProductDetails.jsx";
 import ProductSizeDetails from "./components/ProductSizeDetails.jsx";
 // Api Slices
 import store from "./store";
+// Layouts
+import Layout from "./components/Layout.jsx";
+
+
+import LoginForm from "./screens/LoginForm.jsx";
+import RegisterForm from "./screens/RegisterForm.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<App />}>
-      {/* Screens */}
-      <Route index element={<HomeScreen />} />
-      <Route path="products" element={<ProductsAdminScreen />} />
-      <Route path="brands" element={<BrandsAdminScreen />} />
-      <Route path="categories" element={<CategoriesAdminScreen />} />
-      <Route path="colors" element={<ColorsAdminScreen />} />
-      <Route path="productsizes" element={<ProductSizesAdminScreen />} />
-      <Route path="productvariants" element={<ProductVariantAdminScreen />} />
+    <>
+      <Route path="/" element={<App />}>
+      
+      {/* Public routes */}
+      <Route index element={<LoginForm />} />
+      <Route path="login" element={<LoginForm />} />
+      <Route path="register" element={<RegisterForm />} />
 
-      {/* Components */}
-      <Route path="/products/:id" element={<ProductDetails />} />
-      <Route path="/productsizes/:id" element={<ProductSizeDetails />} />
+      {/* Dashboard */}
+      <Route element={<Layout />}>
+        <Route path="dashboard" element={<HomeScreen />} />
+        <Route path="users/:role" element={<UsersAdminScreen />} />
 
-      {/* Fallback */}
+      </Route>
+
+      {/* Catch-all 404 */}
       <Route path="*" element={<NotFoundScreen />} />
+      
     </Route>
+    </>
   )
 );
 

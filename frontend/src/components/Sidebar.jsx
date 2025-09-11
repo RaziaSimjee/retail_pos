@@ -32,9 +32,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
       label: "Users",
       icon: UsersIcon,
       subItems: [
-        { to: "/users/cashiers", label: "Cashiers" },
-        { to: "/users/managers", label: "Managers" },
-        { to: "/users/customers", label: "Customers" },
+        { to: "/users/cashier", label: "Cashiers" },
+        { to: "/users/manager", label: "Managers" },
+        { to: "/users/customer", label: "Customers" },
       ],
     },
   ];
