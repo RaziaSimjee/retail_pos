@@ -19,6 +19,7 @@ import CategoriesAdminScreen from "./screens/CategoriesAdminScreen.jsx";
 import ColorsAdminScreen from "./screens/ColorsAdminScreen.jsx";
 import ProductSizesAdminScreen from "./screens/ProductSizesAdminScreen.jsx";
 import UsersAdminScreen from "./screens/UsersAdminScreen.jsx";
+import SuppliersAdminScreen from "./screens/SuppliersAdminScreen.jsx";
 import NotFoundScreen from "./screens/NotFoundScreen.jsx";
 // Components
 import ProductDetails from "./components/ProductDetails.jsx";
@@ -48,6 +49,7 @@ const router = createBrowserRouter(
         <Route path="dashboard" element={<HomeScreen />} />
         <Route path="users/:role" element={<UsersAdminScreen />} />
         <Route path="/addresses/:id" element={<AddressesScreen />} />
+        <Route path="/suppliers" element={<SuppliersAdminScreen />} />
 
       </Route>
 

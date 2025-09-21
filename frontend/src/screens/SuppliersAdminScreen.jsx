@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 import {
   useGetAllSuppliersQuery,
   useAddSupplierMutation,
@@ -26,8 +26,12 @@ export default function SuppliersAdminScreen() {
     phone: "",
   });
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Handle field changes
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
+  // Edit supplier
   const handleEditClick = (supplier) => {
     setSelectedSupplier(supplier);
     setFormData({
@@ -38,6 +42,7 @@ export default function SuppliersAdminScreen() {
     });
   };
 
+  // Delete supplier
   const handleDeleteClick = async (id) => {
     if (window.confirm("Are you sure you want to delete this supplier?")) {
       try {
@@ -50,6 +55,7 @@ export default function SuppliersAdminScreen() {
     }
   };
 
+  // Update supplier submit
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -62,6 +68,7 @@ export default function SuppliersAdminScreen() {
     }
   };
 
+  // Add supplier submit
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -75,8 +82,18 @@ export default function SuppliersAdminScreen() {
     }
   };
 
-  if (isLoading) return <p className="text-center mt-4 text-gray-500">Loading suppliers...</p>;
-  if (error) return <p className="text-center mt-4 text-red-500">Error loading suppliers</p>;
+  const handleViewAddresses = (supplierId) => {
+    navigate(`/addresses/${supplierId}`);
+  };
+
+  if (isLoading)
+    return (
+      <p className="text-center mt-4 text-gray-500">Loading suppliers...</p>
+    );
+  if (error)
+    return (
+      <p className="text-center mt-4 text-red-500">Error loading suppliers</p>
+    );
 
   return (
     <div className="p-6">
@@ -101,13 +118,25 @@ export default function SuppliersAdminScreen() {
               <td className="py-2 px-4">{sup.companyName || "-"}</td>
               <td className="py-2 px-4">{sup.email}</td>
               <td className="py-2 px-4">{sup.phone || "-"}</td>
-              <td className="py-2 px-4">{new Date(sup.createdAt).toLocaleString()}</td>
-              <td className="py-2 px-4">{new Date(sup.updatedAt).toLocaleString()}</td>
+              <td className="py-2 px-4">
+                {new Date(sup.createdAt).toLocaleString()}
+              </td>
+              <td className="py-2 px-4">
+                {new Date(sup.updatedAt).toLocaleString()}
+              </td>
               <td className="py-2 px-4 flex justify-center gap-2">
-                <button onClick={() => handleEditClick(sup)} className="text-blue-500 hover:text-blue-700" title="Edit">
+                <button
+                  onClick={() => handleEditClick(sup)}
+                  className="text-blue-500 hover:text-blue-700"
+                  title="Edit"
+                >
                   <FaEdit />
                 </button>
-                <button onClick={() => handleDeleteClick(sup._id)} className="text-red-500 hover:text-red-700" title="Delete">
+                <button
+                  onClick={() => handleDeleteClick(sup._id)}
+                  className="text-red-500 hover:text-red-700"
+                  title="Delete"
+                >
                   <FaTrash />
                 </button>
                 <Link
@@ -138,23 +167,61 @@ export default function SuppliersAdminScreen() {
             <form onSubmit={handleUpdateSubmit} className="space-y-3">
               <div>
                 <label className="block mb-1">Full Name</label>
-                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                  required
+                />
               </div>
               <div>
                 <label className="block mb-1">Company Name</label>
-                <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
+                <input
+                  type="text"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                  required
+                />
               </div>
               <div>
                 <label className="block mb-1">Email</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                  required
+                />
               </div>
               <div>
                 <label className="block mb-1">Phone</label>
-                <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-2 py-1" />
+                <input
+                  type="text"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                />
               </div>
               <div className="flex justify-end gap-2 mt-3">
-                <button type="button" onClick={() => setSelectedSupplier(null)} className="px-3 py-1 border rounded hover:bg-gray-100">Cancel</button>
-                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Update</button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSupplier(null)}
+                  className="px-3 py-1 border rounded hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Update
+                </button>
               </div>
             </form>
           </div>
@@ -169,23 +236,61 @@ export default function SuppliersAdminScreen() {
             <form onSubmit={handleAddSubmit} className="space-y-3">
               <div>
                 <label className="block mb-1">Full Name</label>
-                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                  required
+                />
               </div>
               <div>
                 <label className="block mb-1">Company Name</label>
-                <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
+                <input
+                  type="text"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                  required
+                />
               </div>
               <div>
                 <label className="block mb-1">Email</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                  required
+                />
               </div>
               <div>
                 <label className="block mb-1">Phone</label>
-                <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-2 py-1" />
+                <input
+                  type="text"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                />
               </div>
               <div className="flex justify-end gap-2 mt-3">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-3 py-1 border rounded hover:bg-gray-100">Cancel</button>
-                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-3 py-1 border rounded hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Add
+                </button>
               </div>
             </form>
           </div>

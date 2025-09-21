@@ -12,6 +12,7 @@ import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import router from './routes/authRoutes.js';
 import userAddressRouter from './routes/userAddressRoutes.js';
+import SupplierRoutes from './routes/supplierRoutes.js';
 import connectDB from './db.js';
 import { authenticateJWT, authorizeRoles } from './middleware/auth.js';
 dotenv.config();
@@ -37,7 +38,7 @@ connectDB();
 // ===== Routes =====
 app.use('/api/users', router);
 app.use('/api/addresses', userAddressRouter);
-
+app.use('/api/suppliers', SupplierRoutes);
 
 // ===== Microservices =====
 const services = [
