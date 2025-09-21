@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import {
@@ -14,7 +14,7 @@ export default function SuppliersAdminScreen() {
   const [addSupplier] = useAddSupplierMutation();
   const [updateSupplier] = useUpdateSupplierMutation();
   const [deleteSupplier] = useDeleteSupplierMutation();
-  const navigate = useNavigate();
+  
 
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);

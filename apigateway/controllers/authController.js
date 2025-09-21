@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import cryptoRandomString from "crypto-random-string";
+import nodemailer from "nodemailer";
 
 // Generate JWT token
 const generateToken = (res, userId) => {
@@ -202,28 +204,37 @@ const sendResetPasswordEmail = async (email, code) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "Email not found" });
 
-    // Generate 6-digit numeric code
+    // Generate a 6-digit numeric code
     const resetCode = cryptoRandomString({ length: 6, type: "numeric" });
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // your app password
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Password Reset Code",
+      text: `Your password reset code is ${resetCode}. It expires in 5 minutes.`,
+    });
+
+    // Save code & expiration to user
     user.resetCode = resetCode;
     user.resetCodeExpiration = Date.now() + 5 * 60 * 1000; // 5 minutes
     await user.save();
 
-    await sendResetPasswordEmail(email, resetCode);
-
     res.status(200).json({ message: "Verification code sent to your email" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Forgot password error:", err);
+    res.status(500).json({ message: err.message || "Server error" });
   }
 };
 
@@ -233,22 +244,23 @@ export const resetPassword = async (req, res) => {
     const { email, resetCode, newPassword } = req.body;
 
     if (!email || !resetCode || !newPassword) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message: "Email, reset code, and new password are required" });
     }
 
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Check if reset code matches
     if (user.resetCode !== resetCode) {
       return res.status(400).json({ message: "Invalid reset code" });
     }
 
+    // Check if code has expired
     if (!user.resetCodeExpiration || user.resetCodeExpiration < Date.now()) {
-      return res.status(400).json({ message: "Reset code has expired" });
+      return res.status(400).json({ message: "Reset code has expired. Please request a new one." });
     }
 
+    // Update password and clear reset code
     user.password = newPassword;
     user.resetCode = undefined;
     user.resetCodeExpiration = undefined;
@@ -256,8 +268,9 @@ export const resetPassword = async (req, res) => {
     await user.save();
 
     res.status(200).json({ message: "Password reset successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
   }
 };
+

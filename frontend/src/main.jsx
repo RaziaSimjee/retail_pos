@@ -33,6 +33,8 @@ import AddressesScreen from "./screens/AddressesScreen.jsx";
 // Auth Screens
 import LoginForm from "./screens/LoginForm.jsx";
 import RegisterForm from "./screens/RegisterForm.jsx";
+import ForgotPasswordScreen from "./screens/ForgotPasswordScreen.jsx";
+// import ResetPasswordForm from "./screens/ResetPasswordForm.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -43,6 +45,7 @@ const router = createBrowserRouter(
       <Route index element={<LoginForm />} />
       <Route path="login" element={<LoginForm />} />
       <Route path="register" element={<RegisterForm />} />
+      <Route path="forgotPassword" element={<ForgotPasswordScreen />} />
 
       {/* Admin Dashboard */}
       <Route element={<Layout />}>
