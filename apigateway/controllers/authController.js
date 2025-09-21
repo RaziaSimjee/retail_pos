@@ -177,3 +177,87 @@ export const getUsersByRole = async (req, res) => {
     res.status(500).json({ message: error.message || "Server error" });
   }
 };
+
+// Send email function
+const sendResetPasswordEmail = async (email, code) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.Node_Email,
+      pass: process.env.Node_Password,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.Node_Email,
+    to: email,
+    subject: "Password Reset Request",
+    text: `Your password reset code is: ${code}. It will expire in 5 minutes.`,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+// =================== FORGOT PASSWORD ===================
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate 6-digit numeric code
+    const resetCode = cryptoRandomString({ length: 6, type: "numeric" });
+    user.resetCode = resetCode;
+    user.resetCodeExpiration = Date.now() + 5 * 60 * 1000; // 5 minutes
+    await user.save();
+
+    await sendResetPasswordEmail(email, resetCode);
+
+    res.status(200).json({ message: "Verification code sent to your email" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// =================== RESET PASSWORD ===================
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, resetCode, newPassword } = req.body;
+
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.resetCode !== resetCode) {
+      return res.status(400).json({ message: "Invalid reset code" });
+    }
+
+    if (!user.resetCodeExpiration || user.resetCodeExpiration < Date.now()) {
+      return res.status(400).json({ message: "Reset code has expired" });
+    }
+
+    user.password = newPassword;
+    user.resetCode = undefined;
+    user.resetCodeExpiration = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
