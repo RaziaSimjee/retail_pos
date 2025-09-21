@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { useRegisterMutation } from "../slices/usersApiSlice.js"; // RTK Query mutation
+import { useRegisterMutation } from "../slices/usersApiSlice.js";
 import { setCredentials } from "../slices/authSlice.js";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 export default function RegisterScreen() {
   const dispatch = useDispatch();
@@ -21,72 +22,106 @@ export default function RegisterScreen() {
     description: "",
   });
 
+  const [formErrors, setFormErrors] = useState({
+    phoneNumber: "",
+    DOB: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [register, { isLoading }] = useRegisterMutation();
 
   useEffect(() => {
-    if (userInfo) {
-      navigate("/dashboard"); // redirect if already logged in
-    }
+    if (userInfo) navigate("/dashboard");
   }, [userInfo, navigate]);
 
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,12}$/;
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Inline validations
+    if (name === "phoneNumber") {
+      const phoneRegex = /^\+?[0-9]*$/;
+      setFormErrors((prev) => ({
+        ...prev,
+        phoneNumber: phoneRegex.test(value)
+          ? ""
+          : "Phone number must contain only numbers and an optional leading +",
+      }));
+    }
+
+    if (name === "DOB") {
+      if (value) {
+        const dob = new Date(value);
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+        setFormErrors((prev) => ({
+          ...prev,
+          DOB: age < 18 ? "You must be at least 18 years old to register." : "",
+        }));
+      } else {
+        setFormErrors((prev) => ({
+          ...prev,
+          DOB: "Please enter your date of birth.",
+        }));
+      }
+    }
+
+    if (name === "password") {
+      setFormErrors((prev) => ({
+        ...prev,
+        password: passwordRegex.test(value)
+          ? ""
+          : "Password must be 8-12 characters and include uppercase, lowercase, number, and special character.",
+        confirmPassword:
+          formData.confirmPassword && value !== formData.confirmPassword
+            ? "Passwords do not match."
+            : "",
+      }));
+    }
+
+    if (name === "confirmPassword") {
+      setFormErrors((prev) => ({
+        ...prev,
+        confirmPassword:
+          value !== formData.password ? "Passwords do not match." : "",
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Password regex: min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-    if (!passwordRegex.test(formData.password)) {
-      toast.error(
-        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
-      );
+    if (
+      formErrors.phoneNumber ||
+      formErrors.DOB ||
+      formErrors.password ||
+      formErrors.confirmPassword
+    )
       return;
-    }
-    // Client-side validation
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    // Check if user is at least 18
-    if (formData.DOB) {
-      const dob = new Date(formData.DOB);
-      const today = new Date();
-      let age = today.getFullYear() - dob.getFullYear();
-      const m = today.getMonth() - dob.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-        age--;
-      }
-
-      if (age < 18) {
-        toast.error("You must be at least 18 years old to register.");
-        return;
-      }
-    } else {
-      toast.error("Please enter your date of birth.");
-      return;
-    }
 
     try {
       const res = await register(formData).unwrap();
-      dispatch(setCredentials({ ...res }));
+      // Prevent undefined userInfo issues
+      if (res?.user) dispatch(setCredentials({ ...res }));
       toast.success("Registration successful!");
-      navigate("/dashboard"); // redirect after registration
+      navigate("/dashboard");
     } catch (err) {
-      // Backend validation errors (Mongoose)
       if (err?.data?.errors) {
         Object.values(err.data.errors).forEach((error) =>
           toast.error(error.message)
         );
-      }
-      // Simple message
-      else if (err?.data?.message) {
+      } else if (err?.data?.message) {
         toast.error(err.data.message);
-      }
-      // Network or other errors
-      else {
+      } else {
         toast.error(err?.error || "Something went wrong");
       }
     }
@@ -100,7 +135,7 @@ export default function RegisterScreen() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Username */}
           <div>
-            <label className="block font-medium mb-1" htmlFor="username">
+            <label htmlFor="username" className="block font-medium mb-1">
               Username
             </label>
             <input
@@ -116,7 +151,7 @@ export default function RegisterScreen() {
 
           {/* Email */}
           <div>
-            <label className="block font-medium mb-1" htmlFor="email">
+            <label htmlFor="email" className="block font-medium mb-1">
               Email
             </label>
             <input
@@ -131,12 +166,12 @@ export default function RegisterScreen() {
           </div>
 
           {/* Password */}
-          <div>
-            <label className="block font-medium mb-1" htmlFor="password">
+          <div className="relative">
+            <label htmlFor="password" className="block font-medium mb-1">
               Password
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               id="password"
               value={formData.password}
@@ -144,15 +179,24 @@ export default function RegisterScreen() {
               required
               className="w-full border rounded px-3 py-2"
             />
+            <span
+              className="absolute right-3 top-10 cursor-pointer text-gray-500"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
+            </span>
+            {formErrors.password && (
+              <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
+            )}
           </div>
 
           {/* Confirm Password */}
-          <div>
-            <label className="block font-medium mb-1" htmlFor="confirmPassword">
+          <div className="relative">
+            <label htmlFor="confirmPassword" className="block font-medium mb-1">
               Confirm Password
             </label>
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"
               id="confirmPassword"
               value={formData.confirmPassword}
@@ -160,11 +204,26 @@ export default function RegisterScreen() {
               required
               className="w-full border rounded px-3 py-2"
             />
+            <span
+              className="absolute right-3 top-10 cursor-pointer text-gray-500"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? (
+                <AiOutlineEye />
+              ) : (
+                <AiOutlineEyeInvisible />
+              )}
+            </span>
+            {formErrors.confirmPassword && (
+              <p className="text-red-500 text-sm mt-1">
+                {formErrors.confirmPassword}
+              </p>
+            )}
           </div>
 
           {/* User Role */}
           <div>
-            <label className="block font-medium mb-1" htmlFor="userRole">
+            <label htmlFor="userRole" className="block font-medium mb-1">
               User Role
             </label>
             <select
@@ -183,7 +242,7 @@ export default function RegisterScreen() {
 
           {/* DOB */}
           <div>
-            <label className="block font-medium mb-1" htmlFor="DOB">
+            <label htmlFor="DOB" className="block font-medium mb-1">
               Date of Birth
             </label>
             <input
@@ -195,11 +254,14 @@ export default function RegisterScreen() {
               className="w-full border rounded px-3 py-2"
               required
             />
+            {formErrors.DOB && (
+              <p className="text-red-500 text-sm mt-1">{formErrors.DOB}</p>
+            )}
           </div>
 
           {/* Phone Number */}
           <div>
-            <label className="block font-medium mb-1" htmlFor="phoneNumber">
+            <label htmlFor="phoneNumber" className="block font-medium mb-1">
               Phone Number
             </label>
             <input
@@ -211,11 +273,16 @@ export default function RegisterScreen() {
               className="w-full border rounded px-3 py-2"
               required
             />
+            {formErrors.phoneNumber && (
+              <p className="text-red-500 text-sm mt-1">
+                {formErrors.phoneNumber}
+              </p>
+            )}
           </div>
 
           {/* Description */}
           <div>
-            <label className="block font-medium mb-1" htmlFor="description">
+            <label htmlFor="description" className="block font-medium mb-1">
               Description
             </label>
             <textarea

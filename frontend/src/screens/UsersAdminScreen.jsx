@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom"; // <-- import Link
 import { toast } from "react-toastify";
 import {
   useGetUsersByRoleQuery,
@@ -8,8 +8,8 @@ import {
 } from "../slices/usersApiSlice.js";
 
 export default function UsersAdminScreen() {
-  const { role } = useParams(); // get role from URL
- const { data, error, isLoading } = useGetUsersByRoleQuery(role);
+  const { role } = useParams();
+  const { data, error, isLoading } = useGetUsersByRoleQuery(role);
   const [updateUser] = useUpdateUserMutation();
   const [deleteUser] = useDeleteUserMutation();
 
@@ -55,7 +55,7 @@ export default function UsersAdminScreen() {
     try {
       await updateUser({ id: selectedUser.userID, ...formData }).unwrap();
       toast.success("User updated successfully");
-      setSelectedUser(null); // close modal
+      setSelectedUser(null);
     } catch (err) {
       toast.error(err?.data?.message || "Failed to update user");
     }
@@ -90,10 +90,10 @@ export default function UsersAdminScreen() {
               </td>
               <td className="py-2 px-4 border">{user.phoneNumber || "-"}</td>
               <td className="py-2 px-4 border">{user.description || "-"}</td>
-              <td className="py-2 px-4 border">
+              <td className="py-2 px-4 border flex justify-center space-x-2">
                 <button
                   onClick={() => handleEditClick(user)}
-                  className="bg-blue-500 text-white px-2 py-1 rounded mr-2 hover:bg-blue-600"
+                  className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
                 >
                   Edit
                 </button>
@@ -103,6 +103,13 @@ export default function UsersAdminScreen() {
                 >
                   Delete
                 </button>
+                {/* View Addresses Link */}
+                <Link
+                  to={`/addresses/${user.userID}`}
+                  className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                >
+                  View Addresses
+                </Link>
               </td>
             </tr>
           ))}
@@ -115,6 +122,7 @@ export default function UsersAdminScreen() {
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
             <h3 className="text-lg font-bold mb-4">Edit User</h3>
             <form onSubmit={handleUpdateSubmit} className="space-y-3">
+              {/* Username */}
               <div>
                 <label className="block mb-1">Username</label>
                 <input
@@ -127,6 +135,7 @@ export default function UsersAdminScreen() {
                 />
               </div>
 
+              {/* Email */}
               <div>
                 <label className="block mb-1">Email</label>
                 <input
@@ -139,6 +148,7 @@ export default function UsersAdminScreen() {
                 />
               </div>
 
+              {/* Role */}
               <div>
                 <label className="block mb-1">Role</label>
                 <select
@@ -155,6 +165,7 @@ export default function UsersAdminScreen() {
                 </select>
               </div>
 
+              {/* DOB */}
               <div>
                 <label className="block mb-1">DOB</label>
                 <input
@@ -167,6 +178,7 @@ export default function UsersAdminScreen() {
                 />
               </div>
 
+              {/* Phone */}
               <div>
                 <label className="block mb-1">Phone</label>
                 <input
@@ -178,6 +190,7 @@ export default function UsersAdminScreen() {
                 />
               </div>
 
+              {/* Description */}
               <div>
                 <label className="block mb-1">Description</label>
                 <textarea

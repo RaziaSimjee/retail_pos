@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { useLoginMutation } from "../slices/usersApiSlice.js";
+import { useLoginMutation } from "../slices/usersApiSlice.js"; // RTK Query mutation
 import { setCredentials } from "../slices/authSlice.js";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 
-export default function LoginForm() {
+export default function LoginScreen() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { userInfo } = useSelector((state) => state.auth);
@@ -14,6 +15,13 @@ export default function LoginForm() {
     email: "",
     password: "",
   });
+
+  const [formErrors, setFormErrors] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const [login, { isLoading }] = useLoginMutation();
 
@@ -24,16 +32,36 @@ export default function LoginForm() {
   }, [userInfo, navigate]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Inline validation
+    if (name === "email") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      setFormErrors((prev) => ({
+        ...prev,
+        email: emailRegex.test(value) ? "" : "Invalid email address",
+      }));
+    }
+
+    if (name === "password") {
+      setFormErrors((prev) => ({
+        ...prev,
+        password: value ? "" : "Password cannot be empty",
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Final check
     if (!formData.email || !formData.password) {
-      toast.error("Please enter email and password");
+      toast.error("Please fill all fields");
       return;
     }
+
+    if (formErrors.email || formErrors.password) return;
 
     try {
       const res = await login(formData).unwrap();
@@ -41,9 +69,7 @@ export default function LoginForm() {
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
-      if (err?.data?.errors) {
-        Object.values(err.data.errors).forEach((error) => toast.error(error.message));
-      } else if (err?.data?.message) {
+      if (err?.data?.message) {
         toast.error(err.data.message);
       } else {
         toast.error(err?.error || "Something went wrong");
@@ -59,7 +85,9 @@ export default function LoginForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div>
-            <label className="block font-medium mb-1" htmlFor="email">Email</label>
+            <label className="block font-medium mb-1" htmlFor="email">
+              Email
+            </label>
             <input
               type="email"
               name="email"
@@ -69,20 +97,38 @@ export default function LoginForm() {
               required
               className="w-full border rounded px-3 py-2"
             />
+            {formErrors.email && (
+              <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+            )}
           </div>
 
           {/* Password */}
-          <div>
-            <label className="block font-medium mb-1" htmlFor="password">Password</label>
+          <div className="relative">
+            <label className="block font-medium mb-1" htmlFor="password">
+              Password
+            </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               id="password"
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full border rounded px-3 py-2"
+              className="w-full border rounded px-3 py-2 pr-10"
             />
+            <span
+              className="absolute right-3 top-9 cursor-pointer text-gray-500"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <AiFillEye size={20} />
+              ) : (
+                <AiFillEyeInvisible size={20} />
+              )}
+            </span>
+            {formErrors.password && (
+              <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
+            )}
           </div>
 
           {/* Submit Button */}
@@ -95,7 +141,7 @@ export default function LoginForm() {
           </button>
         </form>
 
-        {/* Register link */}
+        {/* Register Link */}
         <p className="mt-4 text-center text-sm text-gray-600">
           Don't have an account?{" "}
           <Link to="/register" className="text-blue-600 hover:underline">

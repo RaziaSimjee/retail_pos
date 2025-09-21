@@ -8,34 +8,36 @@ export default function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Update windowWidth on resize
+  // User role from localStorage
+  const userInfo = localStorage.getItem("userInfo")
+    ? JSON.parse(localStorage.getItem("userInfo"))
+    : null;
+  const allowedRoles = ["admin", "manager", "cashier"];
+  const showSidebar = userInfo && allowedRoles.includes(userInfo.user?.role?.toLowerCase());
+
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Device detection
   const isMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
   const isDesktop = windowWidth >= 1024;
 
-  // Auto collapse/open sidebar on desktop
   useEffect(() => {
-    if (isDesktop) {
+    if (isDesktop && showSidebar) {
       setIsSidebarCollapsed(false);
       setIsSidebarOpen(true);
     } else {
-      setIsSidebarOpen(false); // overlay closed by default on mobile/tablet
+      setIsSidebarOpen(false);
     }
-  }, [isDesktop]);
+  }, [isDesktop, showSidebar]);
 
-  // Sidebar width for desktop
   const sidebarWidth = isDesktop ? (isSidebarCollapsed ? 64 : 280) : 280;
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      {/* Topbar */}
       <Topbar
         isMobile={isMobile || isTablet}
         isOpen={isSidebarOpen}
@@ -43,22 +45,20 @@ export default function Layout() {
       />
 
       <div className="flex flex-1 relative">
-        {/* Sidebar */}
-        <Sidebar
-          isCollapsed={isSidebarCollapsed}
-          setIsCollapsed={setIsSidebarCollapsed}
-          isMobile={isMobile}
-          isTablet={isTablet}
-          isOpen={isSidebarOpen}
-          setIsOpen={setIsSidebarOpen}
-        />
+        {showSidebar && (
+          <Sidebar
+            isCollapsed={isSidebarCollapsed}
+            setIsCollapsed={setIsSidebarCollapsed}
+            isMobile={isMobile}
+            isTablet={isTablet}
+            isOpen={isSidebarOpen}
+            setIsOpen={setIsSidebarOpen}
+          />
+        )}
 
-        {/* Main content */}
         <main
           className="flex-1 transition-all duration-300 overflow-auto"
-          style={{
-            marginLeft: isDesktop ? sidebarWidth : 0,
-          }}
+          style={{ marginLeft: isDesktop && showSidebar ? sidebarWidth : 0 }}
         >
           <Outlet />
         </main>

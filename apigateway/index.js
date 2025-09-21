@@ -11,6 +11,7 @@ import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import router from './routes/authRoutes.js';
+import userAddressRouter from './routes/userAddressRoutes.js';
 import connectDB from './db.js';
 import { authenticateJWT, authorizeRoles } from './middleware/auth.js';
 dotenv.config();
@@ -35,6 +36,7 @@ connectDB();
 
 // ===== Routes =====
 app.use('/api/users', router);
+app.use('/api/addresses', userAddressRouter);
 
 
 // ===== Microservices =====
@@ -87,10 +89,10 @@ services.forEach(({ route, target, protected: isProtected, roles }) => {
 
 // ===== Base Route =====
 app.get('/', (req, res) => {
-  res.send('Welcome to the API Gateway');
+  res.send('✅ Welcome to the API Gateway');
 });
 
 // ===== Start Server =====
 app.listen(PORT, () => {
-  console.log(`API Gateway is running on port ${PORT}`);
+  console.log(`✅ API Gateway is running on port ${PORT}`);
 });

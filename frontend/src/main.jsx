@@ -28,7 +28,8 @@ import store from "./store";
 // Layouts
 import Layout from "./components/Layout.jsx";
 
-
+import AddressesScreen from "./screens/AddressesScreen.jsx";
+// Auth Screens
 import LoginForm from "./screens/LoginForm.jsx";
 import RegisterForm from "./screens/RegisterForm.jsx";
 
@@ -42,10 +43,11 @@ const router = createBrowserRouter(
       <Route path="login" element={<LoginForm />} />
       <Route path="register" element={<RegisterForm />} />
 
-      {/* Dashboard */}
+      {/* Admin Dashboard */}
       <Route element={<Layout />}>
         <Route path="dashboard" element={<HomeScreen />} />
         <Route path="users/:role" element={<UsersAdminScreen />} />
+        <Route path="/addresses/:id" element={<AddressesScreen />} />
 
       </Route>
 
