@@ -40,14 +40,13 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route path="/" element={<App />}>
-      
-      {/* Public routes */}
-      <Route index element={<LoginForm />} />
-      <Route path="login" element={<LoginForm />} />
-      <Route path="register" element={<RegisterForm />} />
-      <Route path="forgotPassword" element={<ForgotPasswordScreen />} />
+        {/* Public routes */}
+        <Route index element={<LoginForm />} />
+        <Route path="login" element={<LoginForm />} />
+        <Route path="register" element={<RegisterForm />} />
+        <Route path="forgotPassword" element={<ForgotPasswordScreen />} />
 
-      {/* Admin Dashboard */}
+        {/* Admin Dashboard */}
       <Route element={<Layout />}>
         <Route path="dashboard" element={<HomeScreen />} />
         <Route path="users/:role" element={<UsersAdminScreen />} />
@@ -56,10 +55,9 @@ const router = createBrowserRouter(
 
       </Route>
 
-      {/* Catch-all 404 */}
-      <Route path="*" element={<NotFoundScreen />} />
-      
-    </Route>
+        {/* Catch-all 404 */}
+        <Route path="*" element={<NotFoundScreen />} />
+      </Route>
     </>
   )
 );

@@ -7,7 +7,7 @@ export const addressesApiSlice = apiSlice.injectEndpoints({
       providesTags: ["Addresses"],
     }),
     getAddressesByUserId: builder.query({
-      query: (userId) => `/api/addresses/user/${userId}`,
+      query: (userId) => `/api/addresses/users/${userId}`,
       providesTags: ["Addresses"],
     }),
 

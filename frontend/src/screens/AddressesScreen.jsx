@@ -1,191 +1,236 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom"; // to get ID from URL
 import {
-  useGetAllSuppliersQuery,
-  useAddSupplierMutation,
-  useUpdateSupplierMutation,
-  useDeleteSupplierMutation,
-} from "../slices/suppliersApiSlice";
+  useGetAddressesByUserIdQuery,
+  useAddAddressMutation,
+  useUpdateAddressMutation,
+  useDeleteAddressMutation,
+} from "../slices/addressesApiSlice";
+import FloatingAddButton from "../components/FloatingAddButton";
+import { toast } from "react-toastify";
 
-export default function SuppliersAdminScreen() {
-  const { data, isLoading, error, refetch } = useGetAllSuppliersQuery();
-  const [addSupplier] = useAddSupplierMutation();
-  const [updateSupplier] = useUpdateSupplierMutation();
-  const [deleteSupplier] = useDeleteSupplierMutation();
-  
+export default function AddressesScreen() {
+  const { id } = useParams(); // userID from URL
+  const { data, isLoading, error, refetch } = useGetAddressesByUserIdQuery(id);
+  const [addAddress] = useAddAddressMutation();
+  const [updateAddress] = useUpdateAddressMutation();
+  const [deleteAddress] = useDeleteAddressMutation();
 
-  const [selectedSupplier, setSelectedSupplier] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-
+  const [formOpen, setFormOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const [formData, setFormData] = useState({
-    fullName: "",
-    companyName: "",
-    email: "",
-    phone: "",
+    country: "",
+    state: "",
+    label: "",
+    zipcode: "",
+    town: "",
+    laneNo: "",
+    buildingNo: "",
+    floor: "",
+    roomNo: "",
   });
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (selectedAddress) {
+      setFormData({ ...selectedAddress });
+    }
+  }, [selectedAddress]);
 
-  const handleEditClick = (supplier) => {
-    setSelectedSupplier(supplier);
-    setFormData({
-      fullName: supplier.fullName,
-      companyName: supplier.companyName || "",
-      email: supplier.email,
-      phone: supplier.phone || "",
-    });
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleAddOrUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        ...formData,
+        userID: id, // always assign URL ID
+      };
+
+      if (selectedAddress) {
+        await updateAddress({ id: selectedAddress.addressID, ...payload }).unwrap();
+        toast.success("Address updated successfully");
+      } else {
+        await addAddress(payload).unwrap();
+        toast.success("Address added successfully");
+      }
+
+      setFormOpen(false);
+      setSelectedAddress(null);
+      setFormData({
+        country: "",
+        state: "",
+        label: "",
+        zipcode: "",
+        town: "",
+        laneNo: "",
+        buildingNo: "",
+        floor: "",
+        roomNo: "",
+      });
+
+      refetch(); // refresh list
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed");
+    }
   };
 
-  const handleDeleteClick = async (id) => {
-    if (window.confirm("Are you sure you want to delete this supplier?")) {
+  const handleEdit = (address) => {
+    setSelectedAddress(address);
+    setFormOpen(true);
+  };
+
+  const handleDelete = async (addressID) => {
+    if (window.confirm("Delete this address?")) {
       try {
-        await deleteSupplier(id).unwrap();
-        toast.success("Supplier deleted successfully");
+        await deleteAddress(addressID).unwrap();
+        toast.success("Address deleted");
         refetch();
       } catch (err) {
-        toast.error(err?.data?.message || "Failed to delete supplier");
+        toast.error(err?.data?.message || "Failed");
       }
     }
   };
 
-  const handleUpdateSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await updateSupplier({ id: selectedSupplier._id, ...formData }).unwrap();
-      toast.success("Supplier updated successfully");
-      setSelectedSupplier(null);
-      refetch();
-    } catch (err) {
-      toast.error(err?.data?.message || "Failed to update supplier");
-    }
-  };
-
-  const handleAddSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await addSupplier(formData).unwrap();
-      toast.success("Supplier added successfully");
-      setShowAddModal(false);
-      setFormData({ fullName: "", companyName: "", email: "", phone: "" });
-      refetch();
-    } catch (err) {
-      toast.error(err?.data?.message || "Failed to add supplier");
-    }
-  };
-
-  if (isLoading) return <p className="text-center mt-4 text-gray-500">Loading suppliers...</p>;
-  if (error) return <p className="text-center mt-4 text-red-500">Error loading suppliers</p>;
+  if (isLoading) return <p>Loading addresses...</p>;
+  if (error) return <p>Error loading addresses</p>;
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Suppliers</h2>
-
-      <table className="min-w-full bg-white border">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="py-2 px-4 border">Full Name</th>
-            <th className="py-2 px-4 border">Company Name</th>
-            <th className="py-2 px-4 border">Email</th>
-            <th className="py-2 px-4 border">Phone</th>
-            <th className="py-2 px-4 border">Created At</th>
-            <th className="py-2 px-4 border">Updated At</th>
-            <th className="py-2 px-4 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data?.suppliers?.map((sup) => (
-            <tr key={sup._id} className="text-center border-b">
-              <td className="py-2 px-4">{sup.fullName}</td>
-              <td className="py-2 px-4">{sup.companyName || "-"}</td>
-              <td className="py-2 px-4">{sup.email}</td>
-              <td className="py-2 px-4">{sup.phone || "-"}</td>
-              <td className="py-2 px-4">{new Date(sup.createdAt).toLocaleString()}</td>
-              <td className="py-2 px-4">{new Date(sup.updatedAt).toLocaleString()}</td>
-              <td className="py-2 px-4 flex justify-center gap-2">
-                <button onClick={() => handleEditClick(sup)} className="text-blue-500 hover:text-blue-700" title="Edit">
-                  <FaEdit />
-                </button>
-                <button onClick={() => handleDeleteClick(sup._id)} className="text-red-500 hover:text-red-700" title="Delete">
-                  <FaTrash />
-                </button>
-                <Link
-                  to={`/addresses/${sup._id}`}
-                  className="text-green-600 hover:text-green-800 underline"
-                >
-                  View Addresses
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Floating Add Button */}
-      <button
-        onClick={() => setShowAddModal(true)}
-        className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700"
-      >
-        <FaPlus />
-      </button>
-
-      {/* Edit Supplier Modal */}
-      {selectedSupplier && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
-            <h3 className="text-lg font-bold mb-4">Edit Supplier</h3>
-            <form onSubmit={handleUpdateSubmit} className="space-y-3">
-              <div>
-                <label className="block mb-1">Full Name</label>
-                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
-              </div>
-              <div>
-                <label className="block mb-1">Company Name</label>
-                <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
-              </div>
-              <div>
-                <label className="block mb-1">Email</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
-              </div>
-              <div>
-                <label className="block mb-1">Phone</label>
-                <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-2 py-1" />
-              </div>
-              <div className="flex justify-end gap-2 mt-3">
-                <button type="button" onClick={() => setSelectedSupplier(null)} className="px-3 py-1 border rounded hover:bg-gray-100">Cancel</button>
-                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Update</button>
-              </div>
-            </form>
-          </div>
-        </div>
+    <div className="relative p-6 bg-gray-50 min-h-screen">
+      {!formOpen && (
+        <FloatingAddButton
+          onClick={() => {
+            setSelectedAddress(null);
+            setFormOpen(true);
+          }}
+        />
       )}
 
-      {/* Add Supplier Modal */}
-      {showAddModal && (
+      <h2 className="text-3xl font-bold mb-6 text-gray-900">Addresses</h2>
+
+      {/* Cards container */}
+      <div className="flex flex-wrap gap-6">
+        {data?.addresses?.map((addr) => (
+          <div
+            key={addr.addressID}
+            className="flex flex-col bg-white rounded-3xl shadow-md hover:shadow-xl transition overflow-hidden cursor-pointer border-2 border-gray-200 hover:border-blue-400 w-96"
+          >
+            <div className="p-5 flex-1 flex flex-col justify-between">
+              <div className="space-y-1 text-sm">
+                <div className="flex">
+                  <span className="font-semibold w-24">User ID:</span>
+                  <span className="truncate">{addr.userID || "-"}</span>
+                </div>
+
+                <div className="flex">
+                  <span className="font-semibold w-24">Country:</span>
+                  <span className="truncate">{addr.country}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold w-24">State:</span>
+                  <span className="truncate">{addr.state || "-"}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold w-24">Label:</span>
+                  <span className="truncate">{addr.label || "-"}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold w-24">Zipcode:</span>
+                  <span className="truncate">{addr.zipcode || "-"}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold w-24">Town:</span>
+                  <span className="truncate">{addr.town || "-"}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold w-24">Lane No:</span>
+                  <span className="truncate">{addr.laneNo || "-"}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold w-24">Building No:</span>
+                  <span className="truncate">{addr.buildingNo || "-"}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold w-24">Floor:</span>
+                  <span className="truncate">{addr.floor || "-"}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-semibold w-24">Room No:</span>
+                  <span className="truncate">{addr.roomNo || "-"}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  className="flex-1 bg-blue-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-blue-600 transition font-medium"
+                  onClick={() => handleEdit(addr)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="flex-1 bg-red-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-red-600 transition font-medium"
+                  onClick={() => handleDelete(addr.addressID)}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add / Update Modal */}
+      {formOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
-            <h3 className="text-lg font-bold mb-4">Add Supplier</h3>
-            <form onSubmit={handleAddSubmit} className="space-y-3">
-              <div>
-                <label className="block mb-1">Full Name</label>
-                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
-              </div>
-              <div>
-                <label className="block mb-1">Company Name</label>
-                <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
-              </div>
-              <div>
-                <label className="block mb-1">Email</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-2 py-1" required />
-              </div>
-              <div>
-                <label className="block mb-1">Phone</label>
-                <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-2 py-1" />
-              </div>
-              <div className="flex justify-end gap-2 mt-3">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-3 py-1 border rounded hover:bg-gray-100">Cancel</button>
-                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
+          <div className="bg-white p-6 rounded shadow-lg w-full max-w-3xl">
+            <h3 className="text-lg font-bold mb-4">
+              {selectedAddress ? "Update Address" : "Add Address"}
+            </h3>
+            <form
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              onSubmit={handleAddOrUpdate}
+            >
+              {[
+                "country",
+                "state",
+                "label",
+                "zipcode",
+                "town",
+                "laneNo",
+                "buildingNo",
+                "floor",
+                "roomNo",
+              ].map((field) => (
+                <div key={field}>
+                  <label className="block text-sm font-medium capitalize">
+                    {field}
+                  </label>
+                  <input
+                    type="text"
+                    name={field}
+                    value={formData[field]}
+                    onChange={handleChange}
+                    className="w-full border rounded px-2 py-1"
+                    required
+                  />
+                </div>
+              ))}
+
+              <div className="md:col-span-2 flex justify-end gap-2 mt-2">
+                <button
+                  type="button"
+                  className="px-3 py-1 border rounded hover:bg-gray-100"
+                  onClick={() => setFormOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  {selectedAddress ? "Update" : "Add"}
+                </button>
               </div>
             </form>
           </div>

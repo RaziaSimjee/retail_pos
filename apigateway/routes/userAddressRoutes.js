@@ -11,10 +11,13 @@ import {
 
 const router = express.Router();
 
-router.route("/:userId").get(getAddressesByUserId);
-router.get("/user/:userId", getAddressesByUserId);
+// Get all addresses
+router.route("/").get(getAllAddresses).post(addUserAddress);
 
-router.route("/").post( addUserAddress).get(getAllAddresses);
+// Get addresses for a specific user
+router.get("/users/:userId", getAddressesByUserId);
+
+// Update / Delete specific address
 router.route("/:id").put(updateUserAddress).delete(deleteUserAddress);
 
 export default router;

@@ -30,17 +30,44 @@ export const addSupplier = async (req, res) => {
 export const updateSupplier = async (req, res) => {
   try {
     const { id } = req.params;
-    const supplier = await Supplier.findById(id);
-    if (!supplier) return res.status(404).json({ message: "Supplier not found" });
+    const { email, ...updateData } = req.body;
 
-    Object.assign(supplier, req.body);
+    // Find the supplier by ID
+    const supplier = await Supplier.findById(id);
+    if (!supplier) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+
+    // Check if email is being updated and already exists for another supplier
+    if (email && email !== supplier.email) {
+      const emailExists = await Supplier.findOne({ email });
+      if (emailExists) {
+        return res.status(400).json({
+          message: "Email already in use by another supplier. Please use a different email.",
+        });
+      }
+      supplier.email = email;
+    }
+
+    // Update other fields
+    Object.assign(supplier, updateData);
+
+    // Save updated supplier
     await supplier.save();
 
-    res.status(200).json({ message: "Supplier updated", supplier });
+    res.status(200).json({
+      message: "Supplier updated successfully",
+      supplier,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Error updating supplier:", err);
+    res.status(500).json({
+      message: "An error occurred while updating the supplier",
+      error: err.message,
+    });
   }
 };
+
 
 // DELETE SUPPLIER
 export const deleteSupplier = async (req, res) => {

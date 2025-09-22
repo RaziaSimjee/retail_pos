@@ -119,17 +119,44 @@ export const login = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedUser = await User.findByIdAndUpdate(id, req.body, {
+    const { email, username, password, userRole, DOB, phoneNumber, description } = req.body;
+
+    // Check if email is being updated and is unique
+    if (email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser && existingUser._id.toString() !== id) {
+        return res
+          .status(400)
+          .json({ message: `Email "${email}" is already registered` });
+      }
+    }
+
+    // Build update object only with provided fields
+    const updateFields = {};
+    if (username) updateFields.username = username;
+    if (email) updateFields.email = email;
+    if (userRole) updateFields.userRole = userRole;
+    if (DOB) updateFields.DOB = DOB;
+    if (phoneNumber) updateFields.phoneNumber = phoneNumber;
+    if (description !== undefined) updateFields.description = description;
+    if (password) updateFields.password = password; // only update if non-empty
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateFields, {
       new: true,
+      runValidators: true, // ensures schema validations are applied
     });
-    if (!updatedUser)
+
+    if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
+    }
 
     res.status(200).json({ message: "User updated", user: updatedUser });
   } catch (error) {
-    res.status(500).json({ message: error });
+    console.error("Update user error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // DELETE
 export const deleteUser = async (req, res) => {

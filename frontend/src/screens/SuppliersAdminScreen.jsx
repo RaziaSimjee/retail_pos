@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import {
   useGetAllSuppliersQuery,
   useAddSupplierMutation,
@@ -10,11 +10,12 @@ import {
 } from "../slices/suppliersApiSlice";
 
 export default function SuppliersAdminScreen() {
+  const navigate = useNavigate();
+
   const { data, isLoading, error, refetch } = useGetAllSuppliersQuery();
   const [addSupplier] = useAddSupplierMutation();
   const [updateSupplier] = useUpdateSupplierMutation();
   const [deleteSupplier] = useDeleteSupplierMutation();
-  const navigate = useNavigate();
 
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -26,12 +27,29 @@ export default function SuppliersAdminScreen() {
     phone: "",
   });
 
-  // Handle field changes
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const validateForm = () => {
+    if (!formData.fullName.trim()) {
+      toast.error("Full name is required");
+      return false;
+    }
+    if (!formData.companyName.trim()) {
+      toast.error("Company name is required");
+      return false;
+    }
+    if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+      toast.error("Valid email is required");
+      return false;
+    }
+    if (formData.phone && !/^\+?\d+$/.test(formData.phone)) {
+      toast.error("Phone number can only contain numbers and optional '+' sign");
+      return false;
+    }
+    return true;
   };
 
-  // Edit supplier
   const handleEditClick = (supplier) => {
     setSelectedSupplier(supplier);
     setFormData({
@@ -42,35 +60,36 @@ export default function SuppliersAdminScreen() {
     });
   };
 
-  // Delete supplier
   const handleDeleteClick = async (id) => {
-    if (window.confirm("Are you sure you want to delete this supplier?")) {
-      try {
-        await deleteSupplier(id).unwrap();
-        toast.success("Supplier deleted successfully");
-        refetch();
-      } catch (err) {
-        toast.error(err?.data?.message || "Failed to delete supplier");
-      }
+    if (!window.confirm("Are you sure you want to delete this supplier?")) return;
+    try {
+      await deleteSupplier(id).unwrap();
+      toast.success("Supplier deleted successfully");
+      refetch();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to delete supplier");
     }
   };
 
-  // Update supplier submit
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     try {
       await updateSupplier({ id: selectedSupplier._id, ...formData }).unwrap();
       toast.success("Supplier updated successfully");
       setSelectedSupplier(null);
+      setFormData({ fullName: "", companyName: "", email: "", phone: "" });
       refetch();
     } catch (err) {
       toast.error(err?.data?.message || "Failed to update supplier");
     }
   };
 
-  // Add supplier submit
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     try {
       await addSupplier(formData).unwrap();
       toast.success("Supplier added successfully");
@@ -86,14 +105,8 @@ export default function SuppliersAdminScreen() {
     navigate(`/addresses/${supplierId}`);
   };
 
-  if (isLoading)
-    return (
-      <p className="text-center mt-4 text-gray-500">Loading suppliers...</p>
-    );
-  if (error)
-    return (
-      <p className="text-center mt-4 text-red-500">Error loading suppliers</p>
-    );
+  if (isLoading) return <p className="text-center mt-4 text-gray-500">Loading suppliers...</p>;
+  if (error) return <p className="text-center mt-4 text-red-500">Error loading suppliers</p>;
 
   return (
     <div className="p-6">
@@ -118,25 +131,13 @@ export default function SuppliersAdminScreen() {
               <td className="py-2 px-4">{sup.companyName || "-"}</td>
               <td className="py-2 px-4">{sup.email}</td>
               <td className="py-2 px-4">{sup.phone || "-"}</td>
-              <td className="py-2 px-4">
-                {new Date(sup.createdAt).toLocaleString()}
-              </td>
-              <td className="py-2 px-4">
-                {new Date(sup.updatedAt).toLocaleString()}
-              </td>
+              <td className="py-2 px-4">{new Date(sup.createdAt).toLocaleString()}</td>
+              <td className="py-2 px-4">{new Date(sup.updatedAt).toLocaleString()}</td>
               <td className="py-2 px-4 flex justify-center gap-2">
-                <button
-                  onClick={() => handleEditClick(sup)}
-                  className="text-blue-500 hover:text-blue-700"
-                  title="Edit"
-                >
+                <button onClick={() => handleEditClick(sup)} className="text-blue-500 hover:text-blue-700" title="Edit">
                   <FaEdit />
                 </button>
-                <button
-                  onClick={() => handleDeleteClick(sup._id)}
-                  className="text-red-500 hover:text-red-700"
-                  title="Delete"
-                >
+                <button onClick={() => handleDeleteClick(sup._id)} className="text-red-500 hover:text-red-700" title="Delete">
                   <FaTrash />
                 </button>
                 <Link
@@ -159,138 +160,38 @@ export default function SuppliersAdminScreen() {
         <FaPlus />
       </button>
 
-      {/* Edit Supplier Modal */}
+      {/* Edit Modal */}
       {selectedSupplier && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
             <h3 className="text-lg font-bold mb-4">Edit Supplier</h3>
             <form onSubmit={handleUpdateSubmit} className="space-y-3">
-              <div>
-                <label className="block mb-1">Full Name</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  className="w-full border rounded px-2 py-1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Company Name</label>
-                <input
-                  type="text"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className="w-full border rounded px-2 py-1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full border rounded px-2 py-1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Phone</label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full border rounded px-2 py-1"
-                />
-              </div>
+              <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Full Name" />
+              <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Company Name" />
+              <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Email" />
+              <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Phone (+123456789)" />
               <div className="flex justify-end gap-2 mt-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedSupplier(null)}
-                  className="px-3 py-1 border rounded hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Update
-                </button>
+                <button type="button" onClick={() => setSelectedSupplier(null)} className="px-3 py-1 border rounded hover:bg-gray-100">Cancel</button>
+                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Update</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Add Supplier Modal */}
+      {/* Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
             <h3 className="text-lg font-bold mb-4">Add Supplier</h3>
             <form onSubmit={handleAddSubmit} className="space-y-3">
-              <div>
-                <label className="block mb-1">Full Name</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  className="w-full border rounded px-2 py-1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Company Name</label>
-                <input
-                  type="text"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className="w-full border rounded px-2 py-1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full border rounded px-2 py-1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Phone</label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full border rounded px-2 py-1"
-                />
-              </div>
+              <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Full Name" />
+              <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Company Name" />
+              <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Email" />
+              <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Phone (+123456789)" />
               <div className="flex justify-end gap-2 mt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-3 py-1 border rounded hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Add
-                </button>
+                <button type="button" onClick={() => setShowAddModal(false)} className="px-3 py-1 border rounded hover:bg-gray-100">Cancel</button>
+                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
               </div>
             </form>
           </div>
