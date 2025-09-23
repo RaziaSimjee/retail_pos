@@ -27,7 +27,17 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
       ],
     },
     { to: "/orders", label: "Orders", icon: ClipboardDocumentListIcon },
-    { to: "/loyalty", label: "Loyalty Program", icon: ClipboardDocumentListIcon },
+        {
+      label: "Loyalty Program",
+      icon: CubeTransparentIcon,
+      subItems: [
+        { to: "/wallets", label: "Wallets" },
+        { to: "/rules", label: "Rules" },
+        { to: "/spendings", label: "Spending" },
+        { to: "/rewards", label: "Rewards" },
+
+      ],
+    },
     {
       label: "Users",
       icon: UsersIcon,

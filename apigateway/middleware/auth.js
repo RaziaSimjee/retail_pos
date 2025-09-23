@@ -4,7 +4,8 @@ export const authenticateJWT = (req, res, next) => {
   try {
     // Get token from cookie or Bearer header
     const authHeader = req.headers['authorization'];
-    const token = req.cookies?.jwt || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+    const token = req.cookies?.jwt || 
+                  (authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
 
     if (!token) {
       return res.status(401).json({ message: 'Authentication required' });
@@ -24,6 +25,7 @@ export const authenticateJWT = (req, res, next) => {
     res.status(401).json({ message: 'Invalid token' });
   }
 };
+
 
 
 

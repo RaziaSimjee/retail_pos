@@ -1,6 +1,3 @@
-
-
-
 import express from 'express';
 import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
@@ -30,7 +27,7 @@ app.use(morgan('combined'));  // Log HTTP requests
 app.use(helmet());            // Add security headers
 app.use(cookieParser());      // Parse cookies
 app.disable('x-powered-by');  // Hide Express info
-app.use(express.json());      // Parse JSON bodies
+
 
 // Connect to MongoDB
 connectDB();
@@ -58,13 +55,16 @@ const services = [
     target: 'http://localhost:8002/',
     protected: true
   },
-  {
-    route: '/payment',        // Requires login (any role)
-    target: 'http://localhost:8003/',
-    protected: true,
-    roles: ['admin', 'manager', 'cashier'],
-  },
+
 ];
+app.use(
+  '/loyaltyProgram',
+  createProxyMiddleware({
+    target: 'http://localhost:7777',
+    changeOrigin: true,
+    pathRewrite: { '^/loyaltyProgram': '' },
+  })
+);
 
 // ===== Apply Proxies =====
 services.forEach(({ route, target, protected: isProtected, roles }) => {

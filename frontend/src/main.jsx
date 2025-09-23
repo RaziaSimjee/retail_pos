@@ -36,6 +36,11 @@ import RegisterForm from "./screens/RegisterForm.jsx";
 import ForgotPasswordScreen from "./screens/ForgotPasswordScreen.jsx";
 // import ResetPasswordForm from "./screens/ResetPasswordForm.jsx";
 
+// Loyalty Program
+import Wallets from "./components/Wallets.jsx";
+import Rules from "./components/Rules.jsx";
+import Rewards from "./components/Rewards.jsx";
+import Spendings from "./components/Spendings.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -47,13 +52,16 @@ const router = createBrowserRouter(
         <Route path="forgotPassword" element={<ForgotPasswordScreen />} />
 
         {/* Admin Dashboard */}
-      <Route element={<Layout />}>
-        <Route path="dashboard" element={<HomeScreen />} />
-        <Route path="users/:role" element={<UsersAdminScreen />} />
-        <Route path="/addresses/:id" element={<AddressesScreen />} />
-        <Route path="/suppliers" element={<SuppliersAdminScreen />} />
-
-      </Route>
+        <Route element={<Layout />}>
+          <Route path="dashboard" element={<HomeScreen />} />
+          <Route path="users/:role" element={<UsersAdminScreen />} />
+          <Route path="/addresses/:id" element={<AddressesScreen />} />
+          <Route path="/suppliers" element={<SuppliersAdminScreen />} />
+          <Route path="/wallets" element={<Wallets />} />
+          <Route path="/rules" element={<Rules />} />
+          <Route path="/rewards" element={<Rewards />} />
+          <Route path="/spendings" element={<Spendings />} />
+        </Route>
 
         {/* Catch-all 404 */}
         <Route path="*" element={<NotFoundScreen />} />
