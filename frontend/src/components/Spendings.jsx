@@ -1,6 +1,7 @@
+// src/pages/Spendings.jsx
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaFilter } from "react-icons/fa";
 import {
   useGetAllLoyaltyWalletsQuery,
   useGetAllPointsSpentByWalletIdQuery,
@@ -15,8 +16,8 @@ export default function Spendings() {
     useGetAllLoyaltyWalletsQuery({ skip: 0, take: 100 });
 
   const [selectedWallet, setSelectedWallet] = useState(null);
+  const [filter, setFilter] = useState("");
 
-  // Fetch list of spending records for the selected wallet
   const {
     data: spendings = [],
     isLoading: spendingsLoading,
@@ -26,17 +27,12 @@ export default function Spendings() {
     { skip: !selectedWallet }
   );
 
-  // Fetch total points spent for the selected wallet
-const {
-  data: totalPointsData,
-  isLoading: totalPointsLoading,
-  refetch: refetchTotalPoints,
-} = useGetTotalSpendingPointsByWalletIdQuery(selectedWallet, {
-  skip: !selectedWallet,
-});
+  const {
+    data: totalPointsData,
+  } = useGetTotalSpendingPointsByWalletIdQuery(selectedWallet, {
+    skip: !selectedWallet,
+  });
 
-
-  // Safely extract totalPointsSpent
   const totalPointsSpent = totalPointsData?.totalPointsSpent ?? 0;
 
   const [editingSpending, setEditingSpending] = useState(null);
@@ -129,9 +125,15 @@ const {
   if (walletsLoading)
     return <p className="text-center mt-4 text-gray-500">Loading wallets...</p>;
   if (selectedWallet && spendingsLoading)
-    return (
-      <p className="text-center mt-4 text-gray-500">Loading spendings...</p>
-    );
+    return <p className="text-center mt-4 text-gray-500">Loading spendings...</p>;
+
+  // Filter spendings by any field
+  const filteredSpendings = spendings.filter((s) =>
+    Object.values(s)
+      .join(" ")
+      .toLowerCase()
+      .includes(filter.toLowerCase())
+  );
 
   return (
     <div className="p-6">
@@ -222,7 +224,7 @@ const {
             <button
               type="button"
               onClick={resetForm}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
             >
               Cancel
             </button>
@@ -230,8 +232,25 @@ const {
         </form>
       )}
 
+      {/* Filter Input */}
+      {selectedWallet && (
+        <div className="mb-4 relative w-full md:w-1/3">
+        <FaFilter
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+          size={16}
+        />
+        <input
+          type="text"
+          placeholder="Filter by ID, Points, Date, or Description"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border p-2 pl-10 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        </div>
+      )}
+
       {/* Spendings Table */}
-      {selectedWallet && spendings.length > 0 ? (
+      {selectedWallet && filteredSpendings.length > 0 ? (
         <div className="overflow-x-auto shadow rounded-lg">
           <table className="min-w-full border border-gray-200 text-left">
             <thead className="bg-gray-100">
@@ -245,7 +264,7 @@ const {
               </tr>
             </thead>
             <tbody>
-              {spendings.map((s) => (
+              {filteredSpendings.map((s) => (
                 <tr key={s.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-2">{s.id}</td>
                   <td className="px-4 py-2">{s.loyaltyWalletId}</td>
@@ -274,10 +293,17 @@ const {
                   </td>
                 </tr>
               ))}
+              {filteredSpendings.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="text-center py-4 text-gray-500">
+                    No spendings match your filter.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-      ) : selectedWallet && spendings.length === 0 ? (
+      ) : selectedWallet && filteredSpendings.length === 0 ? (
         <p className="text-gray-500 mt-4">
           No spendings found for this wallet.
         </p>

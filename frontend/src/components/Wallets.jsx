@@ -1,7 +1,7 @@
 // src/pages/Wallets.jsx
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaFilter } from "react-icons/fa";
 import {
   useGetAllLoyaltyWalletsQuery,
   useGetAllCustomersQuery,
@@ -12,6 +12,7 @@ import {
 
 export default function Wallets() {
   const [editingWallet, setEditingWallet] = useState(null);
+  const [filter, setFilter] = useState("");
 
   const [formData, setFormData] = useState({
     customerId: "",
@@ -21,12 +22,9 @@ export default function Wallets() {
   });
 
   // Fetch wallets
-  const {
-    data: wallets,
-    isLoading,
-    error,
-    refetch,
-  } = useGetAllLoyaltyWalletsQuery({ skip: 0, take: 100 });
+  const { data: wallets, isLoading, error, refetch } =
+    useGetAllLoyaltyWalletsQuery({ skip: 0, take: 100 });
+
   // Fetch customers for dropdown
   const { data: customers } = useGetAllCustomersQuery({ skip: 0, take: 100 });
 
@@ -116,20 +114,22 @@ export default function Wallets() {
   if (isLoading)
     return <p className="text-center mt-4 text-gray-500">Loading wallets...</p>;
   if (error)
-    return (
-      <p className="text-center mt-4 text-red-500">Error loading wallets</p>
-    );
+    return <p className="text-center mt-4 text-red-500">Error loading wallets</p>;
+
+  // Filter wallets by any field
+  const filteredWallets = wallets?.filter((wallet) =>
+    Object.values(wallet)
+      .join(" ")
+      .toLowerCase()
+      .includes(filter.toLowerCase())
+  );
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Loyalty Wallets</h2>
 
       {/* Add/Edit Form */}
-      {/* Add/Edit Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="mb-6 bg-gray-50 p-4 rounded-lg shadow"
-      >
+      <form onSubmit={handleSubmit} className="mb-6 bg-gray-50 p-4 rounded-lg shadow">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1">Customer</label>
@@ -172,9 +172,7 @@ export default function Wallets() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Expiry Date
-            </label>
+            <label className="block text-sm font-medium mb-1">Expiry Date</label>
             <input
               type="date"
               name="expiryDate"
@@ -186,9 +184,7 @@ export default function Wallets() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Description
-            </label>
+            <label className="block text-sm font-medium mb-1">Description</label>
             <input
               type="text"
               name="description"
@@ -196,29 +192,44 @@ export default function Wallets() {
               onChange={handleChange}
               className="border rounded p-2 w-full"
               placeholder="Description"
+              required
             />
           </div>
         </div>
 
-        {/* Buttons below inputs */}
-<div className="flex gap-2 mt-4">
-  <button
-    type="submit"
-    className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-  >
-    <FaPlus />
-    {editingWallet ? "Update Wallet" : "Add Wallet"}
-  </button>
-
-  <button
-    type="button"
-    onClick={resetForm}
-    className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-  >
-    Cancel
-  </button>
-</div>
+        {/* Buttons */}
+        <div className="flex gap-2 mt-4">
+          <button
+            type="submit"
+            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            <FaPlus />
+            {editingWallet ? "Update Wallet" : "Add Wallet"}
+          </button>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+          >
+            Cancel
+          </button>
+        </div>
       </form>
+
+      {/* Filter Input */}
+        <div className="mb-4 relative w-full md:w-1/3">
+          <FaFilter
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={16}
+          />
+          <input
+            type="text"
+            placeholder="Filter by points, wallet id, customer id, date or description"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="border p-2 pl-10 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
       {/* Wallet Table */}
       <div className="overflow-x-auto shadow rounded-lg">
@@ -234,17 +245,12 @@ export default function Wallets() {
             </tr>
           </thead>
           <tbody>
-            {wallets?.map((wallet) => (
-              <tr
-                key={wallet.loyaltyWalletId}
-                className="border-b hover:bg-gray-50"
-              >
+            {filteredWallets?.map((wallet) => (
+              <tr key={wallet.loyaltyWalletId} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-2">{wallet.loyaltyWalletId}</td>
                 <td className="px-4 py-2">{wallet.customerId}</td>
                 <td className="px-4 py-2">{wallet.points}</td>
-                <td className="px-4 py-2">
-                  {new Date(wallet.expiryDate).toLocaleDateString()}
-                </td>
+                <td className="px-4 py-2">{new Date(wallet.expiryDate).toLocaleDateString()}</td>
                 <td className="px-4 py-2">{wallet.description}</td>
                 <td className="px-4 py-2 text-right flex justify-end gap-2">
                   <button
@@ -264,6 +270,13 @@ export default function Wallets() {
                 </td>
               </tr>
             ))}
+            {filteredWallets?.length === 0 && (
+              <tr>
+                <td colSpan="6" className="text-center py-4 text-gray-500">
+                  No wallets match your filter.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

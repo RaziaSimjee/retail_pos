@@ -1,15 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   useGetAllLoyaltyRulesQuery,
   useCreateLoyaltyRuleMutation,
   useUpdateLoyaltyRuleMutation,
   useDeleteLoyaltyRuleMutation,
 } from "../slices/loyaltyProgramApiSlice";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaFilter } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-
 
 const Rules = () => {
   const {
@@ -17,6 +15,7 @@ const Rules = () => {
     isLoading,
     refetch,
   } = useGetAllLoyaltyRulesQuery({ skip: 0, take: 100 });
+
   const [createRule] = useCreateLoyaltyRuleMutation();
   const [updateRule] = useUpdateLoyaltyRuleMutation();
   const [deleteRule] = useDeleteLoyaltyRuleMutation();
@@ -27,6 +26,9 @@ const Rules = () => {
     awardPoints: "",
   });
   const [editingId, setEditingId] = useState(null);
+
+  // Filter state
+  const [filter, setFilter] = useState("");
 
   const handleEdit = (rule) => {
     setFormState({
@@ -89,9 +91,37 @@ const Rules = () => {
     }
   };
 
+  // Filtered rules logic
+  const filteredRules = useMemo(() => {
+    if (!filter.trim()) return rules || [];
+    return (rules || []).filter((rule) => {
+      const search = filter.toLowerCase();
+      return (
+        rule.loyaltyPointRewardRuleId.toString().includes(search) ||
+        rule.minAmount.toString().includes(search) ||
+        rule.maxAmount.toString().includes(search)
+      );
+    });
+  }, [rules, filter]);
+
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Loyalty Point Reward Rules</h1>
+
+      {/* Filter Input */}
+      <div className="mb-4 relative w-full md:w-1/3">
+        <FaFilter
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+          size={16}
+        />
+        <input
+          type="text"
+          placeholder="Filter by ID, Min Amount, or Max Amount"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border p-2 pl-10 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
 
       {/* Form */}
       <form
@@ -158,7 +188,7 @@ const Rules = () => {
           <button
             type="button"
             onClick={resetForm}
-            className="bg-gray-300 px-4 py-2 rounded"
+            className="bg-gray-400 px-4 py-2 text-white hover:bg-gray-500 rounded"
           >
             Cancel
           </button>
@@ -167,59 +197,73 @@ const Rules = () => {
 
       {/* Table */}
       <div className="bg-white shadow rounded overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Min Amount
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Max Amount
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Award Points
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {rules?.map((rule) => (
-              <tr key={rule.loyaltyPointRewardRuleId}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {rule.loyaltyPointRewardRuleId}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {rule.minAmount}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {rule.maxAmount}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {rule.awardPoints}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap flex gap-2">
-                  <button
-                    onClick={() => handleEdit(rule)}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(rule.loyaltyPointRewardRuleId)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <FaTrash />
-                  </button>
-                </td>
+        {isLoading ? (
+          <p className="p-4 text-gray-500">Loading rules...</p>
+        ) : (
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Min Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Max Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Award Points
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredRules.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center text-gray-500 py-4">
+                    No rules found
+                  </td>
+                </tr>
+              ) : (
+                filteredRules.map((rule) => (
+                  <tr key={rule.loyaltyPointRewardRuleId}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {rule.loyaltyPointRewardRuleId}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {rule.minAmount}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {rule.maxAmount}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {rule.awardPoints}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap flex gap-2">
+                      <button
+                        onClick={() => handleEdit(rule)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleDelete(rule.loyaltyPointRewardRuleId)
+                        }
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

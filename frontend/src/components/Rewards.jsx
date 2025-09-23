@@ -1,7 +1,7 @@
 // src/pages/Rewards.jsx
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaFilter } from "react-icons/fa";
 import {
   useGetAllLoyaltyWalletsQuery,
   useGetLoyaltyRewardsByWalletIdQuery,
@@ -16,6 +16,7 @@ export default function Rewards() {
   // Fetch wallets
   const { data: wallets, isLoading: walletsLoading } = useGetAllLoyaltyWalletsQuery({ skip: 0, take: 100 });
   const [selectedWallet, setSelectedWallet] = useState("");
+  const [filter, setFilter] = useState(""); // <-- Filter state
 
   // Fetch rewards for selected wallet
   const { data: rewards = [], isLoading: rewardsLoading, refetch } = useGetLoyaltyRewardsByWalletIdQuery(
@@ -46,9 +47,18 @@ export default function Rewards() {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const validateForm = () => {
-    if (!formData.loyaltyWalletId) { toast.error("Select a wallet"); return false; }
-    if (formData.loyaltyPointsRewarded <= 0) { toast.error("Points must be greater than 0"); return false; }
-    if (!formData.rewardedDate) { toast.error("Rewarded date is required"); return false; }
+    if (!formData.loyaltyWalletId) {
+      toast.error("Select a wallet");
+      return false;
+    }
+    if (formData.loyaltyPointsRewarded <= 0) {
+      toast.error("Points must be greater than 0");
+      return false;
+    }
+    if (!formData.rewardedDate) {
+      toast.error("Rewarded date is required");
+      return false;
+    }
     return true;
   };
 
@@ -106,6 +116,17 @@ export default function Rewards() {
     }
   };
 
+  // Filter rewards based on filter text
+  const filteredRewards = rewards.filter((r) => {
+    const search = filter.toLowerCase();
+    return (
+      r.loyaltyPointsAwardId.toString().includes(search) ||
+      r.loyaltyWalletId.toString().includes(search) ||
+      r.loyaltyPointsRewarded.toString().includes(search) ||
+      new Date(r.rewardedDate).toLocaleDateString().toLowerCase().includes(search)
+    );
+  });
+
   if (walletsLoading) return <p className="text-center mt-4 text-gray-500">Loading wallets...</p>;
   if (selectedWallet && rewardsLoading) return <p className="text-center mt-4 text-gray-500">Loading rewards...</p>;
 
@@ -139,55 +160,84 @@ export default function Rewards() {
         )}
       </div>
 
-      {/* Add/Edit Reward Form */}
+      {/* Filter Input */}
       {selectedWallet && (
-        <form onSubmit={handleSubmit} className="mb-6 bg-gray-50 p-4 rounded-lg shadow">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Points Rewarded</label>
-              <input
-                type="number"
-                name="loyaltyPointsRewarded"
-                value={formData.loyaltyPointsRewarded}
-                onChange={handleChange}
-                className="border rounded p-2 w-full"
-                placeholder="Points"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Rewarded Date</label>
-              <input
-                type="date"
-                name="rewardedDate"
-                value={formData.rewardedDate}
-                onChange={handleChange}
-                className="border rounded p-2 w-full"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 mt-4">
-            <button
-              type="submit"
-              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              <FaPlus /> {editingReward ? "Update Reward" : "Add Reward"}
-            </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+        <div className="mb-4 relative w-full md:w-1/3">
+          <FaFilter
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={16}
+          />
+          <input
+            type="text"
+            placeholder="Filter by points rewarded, wallet id, date or description"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="border p-2 pl-10 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
       )}
 
+      {/* Add/Edit Reward Form */}
+{/* Add/Edit Reward Form */}
+{selectedWallet && (
+  <form onSubmit={handleSubmit} className="mb-6 bg-gray-50 p-4 rounded-lg shadow">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      {/* Show Reward ID when editing */}
+      {editingReward && (
+        <div className="col-span-full">
+          <p className="text-sm text-gray-600">
+            Editing Reward ID:{" "}
+            <span className="font-semibold">{editingReward.loyaltyPointsAwardId}</span>
+          </p>
+        </div>
+      )}
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">Points Rewarded</label>
+        <input
+          type="number"
+          name="loyaltyPointsRewarded"
+          value={formData.loyaltyPointsRewarded}
+          onChange={handleChange}
+          className="border rounded p-2 w-full"
+          placeholder="Points"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Rewarded Date</label>
+        <input
+          type="date"
+          name="rewardedDate"
+          value={formData.rewardedDate}
+          onChange={handleChange}
+          className="border rounded p-2 w-full"
+          required
+        />
+      </div>
+    </div>
+
+    <div className="flex gap-2 mt-4">
+      <button
+        type="submit"
+        className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        <FaPlus /> {editingReward ? "Update Reward" : "Add Reward"}
+      </button>
+      <button
+        type="button"
+        onClick={resetForm}
+        className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+      >
+        Cancel
+      </button>
+    </div>
+  </form>
+)}
+
+
       {/* Rewards Table */}
-      {selectedWallet && rewards.length > 0 ? (
+      {selectedWallet && filteredRewards.length > 0 ? (
         <div className="overflow-x-auto shadow rounded-lg">
           <table className="min-w-full border border-gray-200 text-left">
             <thead className="bg-gray-100">
@@ -200,12 +250,14 @@ export default function Rewards() {
               </tr>
             </thead>
             <tbody>
-              {rewards.map((r) => (
+              {filteredRewards.map((r) => (
                 <tr key={r.loyaltyPointsAwardId} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-2">{r.loyaltyPointsAwardId}</td>
                   <td className="px-4 py-2">{r.loyaltyWalletId}</td>
                   <td className="px-4 py-2">{r.loyaltyPointsRewarded}</td>
-                  <td className="px-4 py-2">{new Date(r.rewardedDate).toLocaleDateString()}</td>
+                  <td className="px-4 py-2">
+                    {new Date(r.rewardedDate).toLocaleDateString()}
+                  </td>
                   <td className="px-4 py-2 text-right flex justify-end gap-2">
                     <button
                       onClick={() => handleEditClick(r)}
@@ -227,8 +279,8 @@ export default function Rewards() {
             </tbody>
           </table>
         </div>
-      ) : selectedWallet && rewards.length === 0 ? (
-        <p className="text-gray-500 mt-4">No rewards found for this wallet.</p>
+      ) : selectedWallet && filteredRewards.length === 0 ? (
+        <p className="text-gray-500 mt-4">No rewards found matching your filter.</p>
       ) : null}
     </div>
   );
