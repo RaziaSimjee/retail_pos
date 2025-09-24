@@ -26,13 +26,17 @@ const ProductModal = ({ mode, product, onClose, onSubmit, isLoading, categories,
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg p-6 relative">
-        <h2 className="text-2xl font-bold mb-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg h-[80vh] overflow-hidden flex flex-col">
+        <h2 className="text-2xl font-bold p-6 border-b">
           {mode === "add" ? "Add Product" : "Edit Product"}
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          
+
+        {/* Scrollable form content */}
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 space-y-4"
+        >
           {/* Product Name */}
           <div>
             <label className="block text-gray-700 font-medium mb-1">Product Name</label>
@@ -44,26 +48,6 @@ const ProductModal = ({ mode, product, onClose, onSubmit, isLoading, categories,
               className="w-full border rounded-lg px-3 py-2"
               required
             />
-          </div>
-
-          {/* Image Upload */}
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Product Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="w-full border rounded-lg px-3 py-2"
-            />
-            {formData.imageURL && (
-              <div className="mt-3">
-                <img
-                  src={formData.imageURL}
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded-lg border"
-                />
-              </div>
-            )}
           </div>
 
           {/* Category Select */}
@@ -102,6 +86,26 @@ const ProductModal = ({ mode, product, onClose, onSubmit, isLoading, categories,
             </select>
           </div>
 
+          {/* Image Upload */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">Product Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="w-full border rounded-lg px-3 py-2"
+            />
+            {formData.imageURL && (
+              <div className="mt-3">
+                <img
+                  src={formData.imageURL}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded-lg border"
+                />
+              </div>
+            )}
+          </div>
+
           {/* Description */}
           <div>
             <label className="block text-gray-700 font-medium mb-1">Description</label>
@@ -110,35 +114,37 @@ const ProductModal = ({ mode, product, onClose, onSubmit, isLoading, categories,
               onChange={(e) => handleChange("description", e.target.value)}
               placeholder="Enter product description"
               className="w-full border rounded-lg px-3 py-2"
+              rows={4}
             />
           </div>
-
-          {/* Buttons */}
-          <div className="flex justify-end gap-3 mt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`px-4 py-2 ${
-                mode === "add" ? "bg-green-500 hover:bg-green-600" : "bg-blue-500 hover:bg-blue-600"
-              } text-white rounded-lg disabled:opacity-50`}
-            >
-              {isLoading
-                ? mode === "add"
-                  ? "Creating..."
-                  : "Updating..."
-                : mode === "add"
-                ? "Create"
-                : "Update"}
-            </button>
-          </div>
         </form>
+
+        {/* Buttons */}
+        <div className="flex justify-end gap-3 p-6 border-t">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className={`px-4 py-2 ${
+              mode === "add" ? "bg-green-500 hover:bg-green-600" : "bg-blue-500 hover:bg-blue-600"
+            } text-white rounded-lg disabled:opacity-50`}
+          >
+            {isLoading
+              ? mode === "add"
+                ? "Creating..."
+                : "Updating..."
+              : mode === "add"
+              ? "Create"
+              : "Update"}
+          </button>
+        </div>
       </div>
     </div>
   );

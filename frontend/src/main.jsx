@@ -14,6 +14,7 @@ import App from "./App.jsx";
 import HomeScreen from "./screens/HomeScreen.jsx";
 import ProductsAdminScreen from "./screens/ProductsAdminScreen.jsx";
 import ProductVariantAdminScreen from "./screens/ProductVaraintAdminScreen.jsx";
+import SerialNumbers from "./components/SerialNumbers.jsx";
 import BrandsAdminScreen from "./screens/BrandsAdminScreen.jsx";
 import CategoriesAdminScreen from "./screens/CategoriesAdminScreen.jsx";
 import ColorsAdminScreen from "./screens/ColorsAdminScreen.jsx";
@@ -24,6 +25,7 @@ import NotFoundScreen from "./screens/NotFoundScreen.jsx";
 // Components
 import ProductDetails from "./components/ProductDetails.jsx";
 import ProductSizeDetails from "./components/ProductSizeDetails.jsx";
+import ProductVariantDetails from "./components/ProductVariantDetails.jsx";
 // Api Slices
 import store from "./store";
 // Layouts
@@ -61,6 +63,17 @@ const router = createBrowserRouter(
           <Route path="/rules" element={<Rules />} />
           <Route path="/rewards" element={<Rewards />} />
           <Route path="/spendings" element={<Spendings />} />
+          <Route path="products" element={<ProductsAdminScreen />} />
+          <Route path="productvariants" element={<ProductVariantAdminScreen />} />
+          <Route path="products/:id" element={<ProductDetails />} />
+          <Route path="productVariants/:id" element={<ProductVariantDetails />} />
+          <Route path="brands" element={<BrandsAdminScreen />} />
+          <Route path="categories" element={<CategoriesAdminScreen />} />
+          <Route path="colors" element={<ColorsAdminScreen />} />
+          <Route path="productsizes" element={<ProductSizesAdminScreen />} />
+          <Route path="productsizes/:id" element={<ProductSizeDetails />} />
+          <Route path="serialnumbers" element={<SerialNumbers />} />
+
         </Route>
 
         {/* Catch-all 404 */}

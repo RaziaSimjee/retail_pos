@@ -81,7 +81,7 @@ export const loyaltyProgramSlice = apiSlice.injectEndpoints({
     }),
 
     getLoyaltyRewardsByWalletId: builder.query({
-      query: ({ walletId, skip = 100, take = 100 }) => ({
+      query: ({ walletId, skip = 0, take = 100 }) => ({
         url: `${API_GATEWAY_URL}/loyaltyProgram/loyaltyrewards/wallet/${walletId}/${skip}/${take}`,
       }),
       providesTags: [{ type: "Loyalty" }],

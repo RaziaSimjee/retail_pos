@@ -1,11 +1,34 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { IconButton, List, ListItem, Typography } from "@material-tailwind/react";
-import { HomeIcon, CubeTransparentIcon, ClipboardDocumentListIcon, UsersIcon } from "@heroicons/react/24/solid";
-import { ChevronRightIcon, ChevronDownIcon, ArrowLeftIcon, ArrowRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  IconButton,
+  List,
+  ListItem,
+  Typography,
+} from "@material-tailwind/react";
+import {
+  HomeIcon,
+  CubeTransparentIcon,
+  ClipboardDocumentListIcon,
+  UsersIcon,
+} from "@heroicons/react/24/solid";
+import {
+  ChevronRightIcon,
+  ChevronDownIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import storeLogo from "../assets/images/ClothesLogo.png";
 
-export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTablet, isOpen, setIsOpen }) {
+export default function Sidebar({
+  isCollapsed,
+  setIsCollapsed,
+  isMobile,
+  isTablet,
+  isOpen,
+  setIsOpen,
+}) {
   const [openDropdown, setOpenDropdown] = useState(null);
   const location = useLocation();
 
@@ -23,11 +46,12 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
         { to: "/productsizes", label: "Sizes" },
         { to: "/products", label: "Products" },
         { to: "/productvariants", label: "Product Variants" },
+        { to: "/serialnumbers", label: "Serial Numbers" },
         { to: "/suppliers", label: "Suppliers" },
       ],
     },
     { to: "/orders", label: "Orders", icon: ClipboardDocumentListIcon },
-        {
+    {
       label: "Loyalty Program",
       icon: CubeTransparentIcon,
       subItems: [
@@ -35,7 +59,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
         { to: "/rules", label: "Rules" },
         { to: "/spendings", label: "Spending" },
         { to: "/rewards", label: "Rewards" },
-
       ],
     },
     {
@@ -49,7 +72,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
     },
   ];
 
-  const toggleDropdown = (label) => setOpenDropdown(openDropdown === label ? null : label);
+  const toggleDropdown = (label) =>
+    setOpenDropdown(openDropdown === label ? null : label);
   const isActive = (to) => location.pathname === to;
 
   const showText = (!isCollapsed && !useOverlay) || (useOverlay && isOpen);
@@ -60,12 +84,21 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
     <>
       {/* Overlay */}
       {useOverlay && isOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setIsOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black/40 z-40"
+          onClick={() => setIsOpen(false)}
+        />
       )}
 
       <aside
         className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform transition-all duration-300
-          ${useOverlay ? (isOpen ? "translate-x-0 w-72" : "-translate-x-full") : ""}
+          ${
+            useOverlay
+              ? isOpen
+                ? "translate-x-0 w-72"
+                : "-translate-x-full"
+              : ""
+          }
           ${!useOverlay ? (isCollapsed ? "w-16" : "w-72") : ""}`}
       >
         <div className="flex flex-col h-full">
@@ -78,8 +111,11 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="hover:bg-gray-200"
               >
-                {isCollapsed ? <ArrowRightIcon className="h-5 w-5 stroke-2 text-gray-700" /> :
-                  <ArrowLeftIcon className="h-5 w-5 stroke-2 text-gray-700" />}
+                {isCollapsed ? (
+                  <ArrowRightIcon className="h-5 w-5 stroke-2 text-gray-700" />
+                ) : (
+                  <ArrowLeftIcon className="h-5 w-5 stroke-2 text-gray-700" />
+                )}
               </IconButton>
             </div>
           )}
@@ -99,10 +135,18 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
           )}
 
           {/* Logo */}
-          <div className={`flex items-center gap-3 px-4 mb-6 transition-all duration-300
-            ${!showText ? "justify-center" : "justify-start"} ${useOverlay && "mt-4"}`}>
+          <div
+            className={`flex items-center gap-3 px-4 mb-6 transition-all duration-300
+            ${!showText ? "justify-center" : "justify-start"} ${
+              useOverlay && "mt-4"
+            }`}
+          >
             <img src={storeLogo} alt="store logo" className="h-8 w-8" />
-            {showText && <Typography className="font-bold text-gray-800 text-lg">EFS Store</Typography>}
+            {showText && (
+              <Typography className="font-bold text-gray-800 text-lg">
+                EFS Store
+              </Typography>
+            )}
           </div>
 
           {/* Menu */}
@@ -113,13 +157,24 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
                   <>
                     <ListItem
                       className={`rounded-lg flex items-center cursor-pointer
-                      ${!showText ? "px-0 py-2 w-16 justify-center" : "px-3 py-2"}
+                      ${
+                        !showText
+                          ? "px-0 py-2 w-16 justify-center"
+                          : "px-3 py-2"
+                      }
                       hover:bg-gray-300 transition-all`}
                       onClick={() => toggleDropdown(link.label)}
                     >
                       <link.icon className="h-5 w-5 text-blue-600" />
-                      {showText && <span className="ml-2 flex-1">{link.label}</span>}
-                      {showText && (openDropdown === link.label ? <ChevronDownIcon className="h-4 w-4 text-gray-400" /> : <ChevronRightIcon className="h-4 w-4 text-gray-400" />)}
+                      {showText && (
+                        <span className="ml-2 flex-1">{link.label}</span>
+                      )}
+                      {showText &&
+                        (openDropdown === link.label ? (
+                          <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+                        ))}
                     </ListItem>
 
                     {openDropdown === link.label && showText && (
@@ -129,7 +184,11 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
                             key={sub.label}
                             to={sub.to}
                             onClick={() => useOverlay && setIsOpen(false)}
-                            className={`block rounded-lg px-3 py-1 text-sm transition-colors ${isActive(sub.to) ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-300"}`}
+                            className={`block rounded-lg px-3 py-1 text-sm transition-colors ${
+                              isActive(sub.to)
+                                ? "bg-blue-100 text-blue-700"
+                                : "text-gray-600 hover:bg-gray-300"
+                            }`}
                           >
                             {sub.label}
                           </Link>
@@ -143,10 +202,16 @@ export default function Sidebar({ isCollapsed, setIsCollapsed, isMobile, isTable
                     onClick={() => useOverlay && setIsOpen(false)}
                     className={`rounded-lg flex items-center cursor-pointer
                     ${!showText ? "px-0 py-2 w-16 justify-center" : "px-3 py-2"}
-                    transition-all ${isActive(link.to) ? "bg-blue-100 text-blue-700" : "hover:bg-gray-300"}`}
+                    transition-all ${
+                      isActive(link.to)
+                        ? "bg-blue-100 text-blue-700"
+                        : "hover:bg-gray-300"
+                    }`}
                   >
                     <link.icon className="h-5 w-5 text-blue-600" />
-                    {showText && <span className="ml-2 flex-1">{link.label}</span>}
+                    {showText && (
+                      <span className="ml-2 flex-1">{link.label}</span>
+                    )}
                   </Link>
                 )}
 

@@ -81,8 +81,8 @@ const ProductsVariantAdminScreen = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {variants?.map((variant) => (
           <div
-            key={variant.id}
-            className="flex flex-col bg-white rounded-3xl shadow-md hover:shadow-xl transition overflow-hidden cursor-pointer border-2 border-gray-200 hover:border-blue-400"
+            key={variant.productVariantID}
+            className="flex flex-col bg-white rounded-3xl shadow-md hover:shadow-xl transition overflow-hidden border-2 border-gray-200 hover:border-blue-400"
           >
             {/* Image */}
             <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
@@ -95,21 +95,26 @@ const ProductsVariantAdminScreen = () => {
             </div>
 
             <div className="p-5 flex-1 flex flex-col justify-between">
-              {/* Variant Name */}
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  {variant.product?.productName || "Unnamed Product"}
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  Size: {variant.productSize?.sizeName || "N/A"}
-                </p>
-                <p className="text-gray-800 font-semibold mt-1">
-                  Price: ${variant.sellingPrice.toFixed(2)}
-                </p>
-              </div>
+              {/* Heading */}
+              <h2 className="text-xl font-bold text-gray-900">
+                {variant.product?.productName || "Unnamed Product"}
+              </h2>
 
-              {/* Buttons */}
-              <div className="flex gap-2 mt-4">
+              {/* View Details link */}
+              <a
+                href={`/productVariants/${variant.productVariantID}`}
+                className="text-blue-600 hover:underline text-sm font-medium mb-2"
+              >
+                View Details
+              </a>
+
+              {/* Description */}
+              <p className="text-gray-600 mb-4">
+                {variant.description || "No description available."}
+              </p>
+
+              {/* Actions */}
+              <div className="flex gap-2">
                 <button
                   onClick={() => handleEdit(variant)}
                   className="flex-1 bg-blue-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-blue-600 transition font-medium"
@@ -117,20 +122,11 @@ const ProductsVariantAdminScreen = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(variant.id)}
+                  onClick={() => handleDelete(variant.productVariantID)}
                   disabled={isDeleting}
                   className="flex-1 bg-red-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-red-600 transition font-medium disabled:opacity-50"
                 >
                   Delete
-                </button>
-              </div>
-
-              <div className="flex gap-2 mt-2">
-                <button className="flex-1 bg-gray-200 text-gray-800 py-2 px-3 text-sm rounded-lg hover:bg-gray-300 transition font-medium">
-                  View Details
-                </button>
-                <button className="flex-1 bg-green-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-green-600 transition font-medium">
-                  Add to Cart
                 </button>
               </div>
             </div>
