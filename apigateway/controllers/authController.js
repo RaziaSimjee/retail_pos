@@ -3,7 +3,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import cryptoRandomString from "crypto-random-string";
 import nodemailer from "nodemailer";
-
+import axios from "axios";
 // Generate JWT token
 const generateToken = (res, userId) => {
   const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -37,15 +37,11 @@ export const register = async (req, res) => {
     } = req.body;
 
     if (!username || !email || !password || !confirmPassword) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Username, email, password, and confirmPassword are required",
-        });
+      return res.status(400).json({
+        message: "Username, email, password, and confirmPassword are required",
+      });
     }
 
-    // Check password match
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
     }
@@ -54,8 +50,7 @@ export const register = async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "Email already in use" });
 
-
-
+    // 1️⃣ Create user in MongoDB
     const user = new User({
       username,
       password,
@@ -67,8 +62,43 @@ export const register = async (req, res) => {
     });
 
     await user.save();
+    console.log("User created:", user);
 
-    // Generate and send JWT token as HTTP-only cookie
+    // 2️⃣ If role is customer, create loyalty account
+    if (userRole === "customer") {
+      try {
+        const loyaltyPayload = {
+          name: username,
+          address: description || "N/A",
+          birthDate: DOB,
+          email,
+          phoneNumber,
+          description: description || "",
+        };
+
+        const loyaltyRes = await axios.post(
+          "http://localhost:7777/customers",
+          loyaltyPayload,
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        if (loyaltyRes?.data?.customerId) {
+          user.customerId = loyaltyRes.data.customerId;
+          await user.save();
+          console.log(
+            "Loyalty account created with ID:",
+            loyaltyRes.data.customerId
+          );
+        }
+      } catch (loyaltyErr) {
+        console.error(
+          "Failed to create loyalty account:",
+          loyaltyErr.response?.data || loyaltyErr.message
+        );
+      }
+    }
+
+    // 3️⃣ Generate JWT
     const token = generateToken(res, user._id);
 
     res.status(201).json({
@@ -78,11 +108,12 @@ export const register = async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.userRole,
+        customerId: user.customerId || null,
       },
     });
   } catch (error) {
     console.error("Register error:", error);
-    res.status(500).json({ message: error });
+    res.status(500).json({ message: error.message || error });
   }
 };
 
@@ -119,7 +150,15 @@ export const login = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, username, password, userRole, DOB, phoneNumber, description } = req.body;
+    const {
+      email,
+      username,
+      password,
+      userRole,
+      DOB,
+      phoneNumber,
+      description,
+    } = req.body;
 
     // Check if email is being updated and is unique
     if (email) {
@@ -156,7 +195,6 @@ export const updateUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // DELETE
 export const deleteUser = async (req, res) => {
@@ -271,7 +309,9 @@ export const resetPassword = async (req, res) => {
     const { email, resetCode, newPassword } = req.body;
 
     if (!email || !resetCode || !newPassword) {
-      return res.status(400).json({ message: "Email, reset code, and new password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email, reset code, and new password are required" });
     }
 
     const user = await User.findOne({ email });
@@ -284,7 +324,9 @@ export const resetPassword = async (req, res) => {
 
     // Check if code has expired
     if (!user.resetCodeExpiration || user.resetCodeExpiration < Date.now()) {
-      return res.status(400).json({ message: "Reset code has expired. Please request a new one." });
+      return res
+        .status(400)
+        .json({ message: "Reset code has expired. Please request a new one." });
     }
 
     // Update password and clear reset code
@@ -300,4 +342,3 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message || "Server error" });
   }
 };
-

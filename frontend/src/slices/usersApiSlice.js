@@ -35,7 +35,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
     }),
     createCustomerLoyaltyAccount: builder.mutation({
       query: (customerData) => ({
-        url: "/api/users/customers",
+        url: "/api/loyaltyProgram/customers",
         method: "POST",
         body: customerData,
       }),

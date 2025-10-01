@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { useRegisterMutation } from "../slices/usersApiSlice.js";
+import { useRegisterMutation, useCreateCustomerLoyaltyAccountMutation } from "../slices/usersApiSlice.js";
 import { setCredentials } from "../slices/authSlice.js";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
@@ -33,6 +33,8 @@ export default function RegisterScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [register, { isLoading }] = useRegisterMutation();
+  const [createLoyaltyAccount] = useCreateCustomerLoyaltyAccountMutation();
+
 
   useEffect(() => {
     if (userInfo) navigate("/dashboard");

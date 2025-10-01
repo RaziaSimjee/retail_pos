@@ -23,7 +23,7 @@ const UserSchema = new mongoose.Schema(
     },
     customerId: {
       type: Number,
-      required: true,
+
     },
     DOB: {
       type: Date,

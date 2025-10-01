@@ -27,7 +27,7 @@ app.use(morgan('combined'));  // Log HTTP requests
 app.use(helmet());            // Add security headers
 app.use(cookieParser());      // Parse cookies
 app.disable('x-powered-by');  // Hide Express info
-
+app.use(express.json());
 
 // Connect to MongoDB
 connectDB();
