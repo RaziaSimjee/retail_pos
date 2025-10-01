@@ -5,15 +5,23 @@ import {
   useUpdateProductVariantMutation,
   useCreateProductVariantMutation,
 } from "../slices/productVariantApiSlice";
-import ProductVariantModal from "../components/ProductVaraintModal.jsx";
+import ProductVariantModal from "../components/ProductVariantModal.jsx";
 import FloatingAddButton from "../components/FloatingAddButton.jsx";
 
 const ProductsVariantAdminScreen = () => {
-  const { data: variants, isLoading, isError, refetch } = useGetProductVariantsQuery({ skip: 0, take: 100 });
+  const {
+    data: variants,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetProductVariantsQuery({ skip: 0, take: 100 });
 
-  const [deleteVariant, { isLoading: isDeleting }] = useDeleteProductVariantMutation();
-  const [updateVariant, { isLoading: isUpdating }] = useUpdateProductVariantMutation();
-  const [createVariant, { isLoading: isCreating }] = useCreateProductVariantMutation();
+  const [deleteVariant, { isLoading: isDeleting }] =
+    useDeleteProductVariantMutation();
+  const [updateVariant, { isLoading: isUpdating }] =
+    useUpdateProductVariantMutation();
+  const [createVariant, { isLoading: isCreating }] =
+    useCreateProductVariantMutation();
 
   const [modalMode, setModalMode] = useState(null); // "add" | "edit" | null
   const [currentVariant, setCurrentVariant] = useState(null);
@@ -23,6 +31,7 @@ const ProductsVariantAdminScreen = () => {
     productSizeID: 0,
     productColorID: 0,
     barcode: "",
+    barCodeImage: "",
     sellingPrice: 0,
     quantity: 0,
     imageURL: "",
@@ -52,68 +61,95 @@ const ProductsVariantAdminScreen = () => {
     }
   };
 
-  const handleModalSubmit = async (formData) => {
-    try {
-      if (modalMode === "add") {
-        await createVariant(formData).unwrap();
-        alert("Variant created successfully!");
-      } else {
-        await updateVariant({ id: currentVariant.id, ...formData }).unwrap();
-        alert("Variant updated successfully!");
-      }
-      refetch();
-      setModalMode(null);
-    } catch (error) {
-      console.error("Failed to save variant:", error);
-      alert("Failed to save variant.");
-    }
-  };
+const handleModalSubmit = async (formData) => {
+  try {
+    // Prepare payload for backend
+    const payload = {
+      productID: formData.productID,
+      productSizeID: formData.productSizeID,
+      productColorID: formData.productColorID,
+      barcode: formData.barcode,
+      barCodeImage: formData.barCodeImage,
+      sellingPrice: formData.sellingPrice,
+      quantity: formData.quantity,
+      imageURL: formData.imageURL,
+      description: formData.description,
+    };
 
-  if (isLoading) return <p className="text-center mt-4 text-gray-400">Loading variants...</p>;
-  if (isError) return <p className="text-center mt-4 text-red-500">Failed to load variants</p>;
+    if (modalMode === "add") {
+      await createVariant(payload).unwrap();
+      alert("Variant created successfully!");
+    } else {
+      await updateVariant({
+        id: currentVariant.productVariantID, // <- use correct ID
+        ...payload,
+      }).unwrap();
+      alert("Variant updated successfully!");
+    }
+
+    refetch();
+    setModalMode(null);
+  } catch (error) {
+    console.error("Failed to save variant:", error);
+    alert("Failed to save variant.");
+  }
+};
+
+
+  if (isLoading)
+    return (
+      <p className="text-center mt-6 text-gray-400">Loading variants...</p>
+    );
+  if (isError)
+    return (
+      <p className="text-center mt-6 text-red-500">Failed to load variants</p>
+    );
 
   return (
     <div className="relative p-6 bg-gray-50 min-h-screen">
       {!modalMode && <FloatingAddButton onClick={handleAdd} />}
 
-      <h1 className="text-4xl font-bold mb-8 text-gray-900">Product Variants</h1>
+      <h1 className="text-4xl font-bold mb-8 text-gray-900">
+        Product Variants
+      </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {variants?.map((variant) => (
           <div
             key={variant.productVariantID}
-            className="flex flex-col bg-white rounded-3xl shadow-md hover:shadow-xl transition overflow-hidden border-2 border-gray-200 hover:border-blue-400"
+            className="flex flex-col bg-white rounded-3xl shadow-lg hover:shadow-2xl transition overflow-hidden border border-gray-200 hover:border-blue-400"
           >
             {/* Image */}
             <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
               <img
-                src={variant.imageURL || "https://via.placeholder.com/300x200"}
+                src={
+                  variant.imageURL || "../assets/images/placeholderDress.jpg"
+                }
                 alt={variant.product?.productName || "Variant"}
-                onError={(e) => (e.target.src = "https://via.placeholder.com/300x200")}
+                onError={(e) =>
+                  (e.target.src = "../assets/images/placeholderDress.jpg")
+                }
                 className="w-full h-full object-cover"
               />
             </div>
 
+            {/* Content */}
             <div className="p-5 flex-1 flex flex-col justify-between">
-              {/* Heading */}
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
                 {variant.product?.productName || "Unnamed Product"}
               </h2>
 
-              {/* View Details link */}
               <a
                 href={`/productVariants/${variant.productVariantID}`}
-                className="text-blue-600 hover:underline text-sm font-medium mb-2"
+                className="text-blue-600 underline text-sm font-medium mb-3"
               >
                 View Details
               </a>
 
-              {/* Description */}
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 text-sm flex-1 mb-4 line-clamp-2">
                 {variant.description || "No description available."}
               </p>
 
-              {/* Actions */}
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEdit(variant)}

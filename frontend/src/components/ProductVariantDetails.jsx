@@ -5,7 +5,11 @@ import GoBackLink from "./GoBackLink.jsx";
 
 const ProductVariantDetails = () => {
   const { id } = useParams();
-  const { data: variant, isLoading, isError } = useGetProductVariantsByIdQuery(id);
+  const {
+    data: variant,
+    isLoading,
+    isError,
+  } = useGetProductVariantsByIdQuery(id);
 
   if (isLoading) {
     return (
@@ -25,7 +29,19 @@ const ProductVariantDetails = () => {
 
   const getImageSrc = (base64) => {
     if (!base64) return "https://via.placeholder.com/150";
-    return base64.startsWith("data:image") ? base64 : `data:image/png;base64,${base64}`;
+    return base64.startsWith("data:image")
+      ? base64
+      : `data:image/png;base64,${base64}`;
+  };
+
+  const downloadBarcode = () => {
+    if (!variant.barCodeImage) return;
+    const link = document.createElement("a");
+    link.href = getImageSrc(variant.barCodeImage);
+    link.download = `barcode-${
+      variant.barcode || variant.productVariantID
+    }.png`;
+    link.click();
   };
 
   return (
@@ -47,17 +63,20 @@ const ProductVariantDetails = () => {
             {variant.product?.productName || "Unnamed Product"}
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Variant ID: <span className="font-medium">{variant.productVariantID}</span>
+            Variant ID:{" "}
+            <span className="font-medium">{variant.productVariantID}</span>
           </p>
           <p className="text-gray-600 mt-3 leading-relaxed">
             {variant.description || "No description provided."}
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-gray-700">
             <p>
-              <span className="font-medium">Price:</span> ${variant.sellingPrice}
+              <span className="font-medium">Price:</span> $
+              {variant.sellingPrice}
             </p>
             <p>
-              <span className="font-medium">Quantity in Stock:</span> {variant.quantity}
+              <span className="font-medium">Quantity in Stock:</span>{" "}
+              {variant.quantity}
             </p>
             <p>
               <span className="font-medium">Barcode:</span> {variant.barcode}
@@ -66,16 +85,34 @@ const ProductVariantDetails = () => {
         </div>
       </div>
 
-      {/* Barcode Image */}
+      {/* Barcode Image + Download */}
       {variant.barCodeImage && (
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-2">Barcode Image</h2>
-          <div className="p-4 border rounded-lg bg-gray-50 flex justify-center">
-            <img
-              src={getImageSrc(variant.barCodeImage)}
-              alt="Barcode"
-              className="w-64 object-contain"
-            />
+          <h2 className="text-xl font-semibold mb-4">Barcode</h2>
+          <div className="flex flex-col md:flex-row md:items-start gap-6">
+            {/* Left Column: Barcode info */}
+            <div className="flex flex-col items-center md:items-start">
+              {/* Barcode Value */}
+              <p className="text-gray-700 mb-3 text-center md:text-left">
+                <span className="font-medium">Barcode:</span>{" "}
+                {variant.barcode}
+              </p>
+
+              {/* Barcode Image */}
+              <img
+                src={getImageSrc(variant.barCodeImage)}
+                alt="Barcode"
+                className="w-56 object-contain border rounded-lg bg-white p-2 mb-3"
+              />
+
+              {/* Download Button */}
+              <button
+                onClick={downloadBarcode}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow text-sm"
+              >
+                Download Barcode
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -92,9 +129,12 @@ const ProductVariantDetails = () => {
                 className="w-24 h-24 mb-3 rounded-lg object-cover"
               />
               <p>
-                <span className="font-medium">Product ID:</span> {variant.product.productID}
+                <span className="font-medium">Product ID:</span>{" "}
+                {variant.product.productID}
               </p>
-              <p className="mt-2 text-gray-600">{variant.product.description}</p>
+              <p className="mt-2 text-gray-600">
+                {variant.product.description}
+              </p>
             </div>
             {/* Category Info */}
             {variant.product.category && (
@@ -132,8 +172,12 @@ const ProductVariantDetails = () => {
               className="w-20 h-20 rounded-lg object-cover"
             />
             <div>
-              <p className="text-gray-800 font-medium">{variant.product.brand.brandName}</p>
-              <p className="text-gray-500 text-sm mt-1">{variant.product.brand.description}</p>
+              <p className="text-gray-800 font-medium">
+                {variant.product.brand.brandName}
+              </p>
+              <p className="text-gray-500 text-sm mt-1">
+                {variant.product.brand.description}
+              </p>
             </div>
           </div>
         </section>
@@ -147,7 +191,8 @@ const ProductVariantDetails = () => {
             <div className="p-4 border rounded-xl bg-gray-50">
               <h3 className="font-semibold mb-2">Size Information</h3>
               <p>
-                <span className="font-medium">Size Name:</span> {variant.productSize.sizeName}
+                <span className="font-medium">Size Name:</span>{" "}
+                {variant.productSize.sizeName}
               </p>
               <p>
                 <span className="font-medium">Range:</span>{" "}
@@ -155,23 +200,35 @@ const ProductVariantDetails = () => {
                 {variant.productSize.measurementUnit}
               </p>
               <p>
-                <span className="font-medium">Region:</span> {variant.productSize.region}
+                <span className="font-medium">Region:</span>{" "}
+                {variant.productSize.region}
               </p>
-              <p className="mt-2 text-gray-600">{variant.productSize.description}</p>
+              <p className="mt-2 text-gray-600">
+                {variant.productSize.description}
+              </p>
             </div>
           )}
 
           {variant.productColor && (
             <div className="p-4 border rounded-xl bg-gray-50">
               <h3 className="font-semibold mb-2">Color Information</h3>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div
                   className="w-8 h-8 rounded-full border"
-                  style={{ backgroundColor: variant.productColor.colorName.toLowerCase() }}
+                  style={{
+                    backgroundColor:
+                      variant.productColor.colorName.toLowerCase(),
+                  }}
                 ></div>
-                <p className="font-medium">{variant.productColor.colorName}</p>
+                <div>
+                  <p className="font-medium">
+                    {variant.productColor.colorName}
+                  </p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    {variant.productColor.description || "No description"}
+                  </p>
+                </div>
               </div>
-              <p className="mt-2 text-gray-600">{variant.productColor.description || "No description"}</p>
             </div>
           )}
         </div>
@@ -180,7 +237,9 @@ const ProductVariantDetails = () => {
       {/* Serial Numbers */}
       {variant.productSerialNumbers?.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Product Serial Numbers</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            Product Serial Numbers
+          </h2>
           <ul className="space-y-2">
             {variant.productSerialNumbers.map((serial, idx) => (
               <li

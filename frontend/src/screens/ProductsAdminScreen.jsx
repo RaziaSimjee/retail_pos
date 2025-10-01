@@ -131,11 +131,11 @@ const ProductsAdminScreen = () => {
             >
               <div className="w-full h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
                 <img
-                  src={product.imageURL || "https://via.placeholder.com/300x200"}
+                  src={product.imageURL || "../assets/images/placeholderDress.jpg"}
                   alt={product.productName}
                   onError={(e) => {
-                    if (e.target.src !== "https://via.placeholder.com/300x200") {
-                      e.target.src = "https://via.placeholder.com/300x200";
+                    if (e.target.src !== "../assets/images/placeholderDress.jpg") {
+                      e.target.src = "../assets/images/placeholderDress.jpg";
                     }
                   }}
                   className="w-full h-full object-cover"

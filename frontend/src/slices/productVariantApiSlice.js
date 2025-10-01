@@ -18,8 +18,8 @@ export const productVariantSlice = apiSlice.injectEndpoints({
       providesTags: (result, error, id) => [{ type: "ProductVariants", id }],
     }),
     getAllSerialNumbers: builder.query({
-      query: ({skip = 0, take = 100}) => ({
-        url: `${API_GATEWAY_URL}/productcatalog/productserialnumbers/${skip}/${take}`,  
+      query: ({ skip = 0, take = 100 }) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/productserialnumbers/${skip}/${take}`,
       }),
       keepUnusedDataFor: 5,
       providesTags: ["ProductSerialNumbers"],
@@ -29,7 +29,9 @@ export const productVariantSlice = apiSlice.injectEndpoints({
         url: `${API_GATEWAY_URL}/productcatalog/productserialnumbers/${id}`,
       }),
       keepUnusedDataFor: 5,
-      providesTags: (result, error, id) => [{ type: "ProductSerialNumbers", id }],
+      providesTags: (result, error, id) => [
+        { type: "ProductSerialNumbers", id },
+      ],
     }),
     createSerialNumbers: builder.mutation({
       query: (payload) => ({
@@ -73,22 +75,42 @@ export const productVariantSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["ProductVariants"],
     }),
     updateProductVariant: builder.mutation({
-      query: (payload) => ({
-        url: `${API_GATEWAY_URL}/productcatalog/productvariants/${payload.id}`,
+      query: ({ id, ...data }) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/productvariants/${id}`,
         method: "PUT",
-        body: payload,
+        body: data,
         headers: {
           "Content-Type": "application/json",
         },
       }),
       invalidatesTags: ["ProductVariants"],
     }),
+
     deleteProductVariant: builder.mutation({
       query: (id) => ({
         url: `${API_GATEWAY_URL}/productcatalog/productvariants/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["ProductVariants"],
+    }),
+    createVariantBarcodeImg: builder.mutation({
+      query: (payload) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/barcode/generate`,
+        method: "POST",
+        body: payload,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
+    getVariantByBarcode: builder.query({
+      query: (barcode) => ({
+        url: `${API_GATEWAY_URL}/productcatalog/productvariants/barcode/${barcode}`,
+      }),
+      keepUnusedDataFor: 5,
+      providesTags: (result, error, barcode) => [
+        { type: "ProductVariants", barcode },
+      ],
     }),
   }),
 });
@@ -98,10 +120,12 @@ export const {
   useGetProductVariantsByIdQuery,
   useGetAllSerialNumbersQuery,
   useGetSerialNumbersByIdQuery,
+  useGetVariantByBarcodeQuery,
   useCreateSerialNumbersMutation,
   useUpdateSerialNumbersMutation,
   useDeleteSerialNumbersMutation,
   useCreateProductVariantMutation,
   useUpdateProductVariantMutation,
   useDeleteProductVariantMutation,
+  useCreateVariantBarcodeImgMutation,
 } = productVariantSlice;
