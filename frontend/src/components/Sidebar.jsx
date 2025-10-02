@@ -50,6 +50,7 @@ export default function Sidebar({
         { to: "/suppliers", label: "Suppliers" },
       ],
     },
+    { to: "/catalog", label: "Catalog", icon: HomeIcon },
     { to: "/orders", label: "Orders", icon: ClipboardDocumentListIcon },
     {
       label: "Loyalty Program",

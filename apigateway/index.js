@@ -22,20 +22,21 @@ app.use(cors({
   origin: ['http://localhost:5173'], // Frontend URL
   credentials: true,                 // Allow cookies
 }));
+// Increase the payload size limit for JSON bodies
+// app.use(express.json({ limit: '50mb' }));
 
+// // Set a limit for URL-encoded bodies as well
+// app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(morgan('combined'));  // Log HTTP requests
 app.use(helmet());            // Add security headers
 app.use(cookieParser());      // Parse cookies
 app.disable('x-powered-by');  // Hide Express info
-app.use(express.json());
+
 
 // Connect to MongoDB
 connectDB();
 
-// ===== Routes =====
-app.use('/api/users', router);
-app.use('/api/addresses', userAddressRouter);
-app.use('/api/suppliers', SupplierRoutes);
+
 
 // ===== Microservices =====
 const services = [
@@ -57,6 +58,16 @@ const services = [
   },
 
 ];
+// app.use(
+//   "/productcatalog",
+//   createProxyMiddleware({
+//     target: "http://localhost:8000",
+//     changeOrigin: true,
+//     pathRewrite: { "^/productcatalog": "" },
+//   })
+// );
+
+
 app.use(
   '/loyaltyProgram',
   createProxyMiddleware({
@@ -87,7 +98,11 @@ services.forEach(({ route, target, protected: isProtected, roles }) => {
     app.use(route, createProxyMiddleware(proxyOptions));
   }
 });
-
+app.use(express.json({ limit: '50mb' }));
+// ===== Routes =====
+app.use('/api/users', router);
+app.use('/api/addresses', userAddressRouter);
+app.use('/api/suppliers', SupplierRoutes);
 // ===== Base Route =====
 app.get('/', (req, res) => {
   res.send('✅ Welcome to the API Gateway');

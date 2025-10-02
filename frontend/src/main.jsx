@@ -14,6 +14,7 @@ import App from "./App.jsx";
 import HomeScreen from "./screens/HomeScreen.jsx";
 import ProductsAdminScreen from "./screens/ProductsAdminScreen.jsx";
 import ProductVariantAdminScreen from "./screens/ProductVaraintAdminScreen.jsx";
+import Catalog from "./screens/Catalog.jsx";
 import SerialNumbers from "./components/SerialNumbers.jsx";
 import BrandsAdminScreen from "./screens/BrandsAdminScreen.jsx";
 import CategoriesAdminScreen from "./screens/CategoriesAdminScreen.jsx";
@@ -52,10 +53,11 @@ const router = createBrowserRouter(
         <Route path="login" element={<LoginForm />} />
         <Route path="register" element={<RegisterForm />} />
         <Route path="forgotPassword" element={<ForgotPasswordScreen />} />
-
+        
         {/* Admin Dashboard */}
         <Route element={<Layout />}>
           <Route path="dashboard" element={<HomeScreen />} />
+          <Route path="catalog" element={<Catalog />} />
           <Route path="users/:role" element={<UsersAdminScreen />} />
           <Route path="/addresses/:id" element={<AddressesScreen />} />
           <Route path="/suppliers" element={<SuppliersAdminScreen />} />

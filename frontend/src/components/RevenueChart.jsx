@@ -9,11 +9,21 @@ import {
   PointElement,
   CategoryScale,
   LinearScale,
+  Filler,
 } from "chart.js";
 import { Card, CardBody, Typography } from "@material-tailwind/react";
 
 // Register Chart.js components
-ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale);
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Filler
+);
 
 const RevenueChart = () => {
   // Fake revenue data (could later be replaced with API data)
