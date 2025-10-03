@@ -3,11 +3,11 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { useCreateSaleMutation } from "../slices/saleApiSlice";
+import { useCreateSaleMutation } from "../slices/saleApiSlice.js";
 import {
   useGetAllCustomersQuery,
   useGetCustomerByIdQuery,
-} from "../slices/loyaltyProgramApiSlice";
+} from "../slices/loyaltyProgramApiSlice.js";
 import { useGetUserByIdQuery } from "../slices/usersApiSlice";
 
 import CartModal from "../components/CartModal.jsx";
@@ -86,6 +86,12 @@ const Checkout = () => {
     return d.toLocaleDateString();
   }, []);
 
+  const openReceipt = (saleId) => {
+    const receiptUrl = `http://localhost:3000/saleService/sales/${saleId}/receipt`;
+    // Open in new tab directly, letting the browser handle it
+    window.open(receiptUrl, "_blank", "noopener,noreferrer");
+  };
+
   const handleCheckout = async () => {
     if (!resolvedCustomerId)
       return toast.error("Customer information is required.");
@@ -95,22 +101,49 @@ const Checkout = () => {
 
     const salePayload = {
       customerID: resolvedCustomerId,
-      employeeID: 0,
+      employeeID: 0, // or parseInt(userInfo.user.userID) for cashier
       taxPercentage,
       discount: isCustomer ? 0 : discount,
       pointsSpent,
       productList,
     };
-    console.log(salePayload);
 
     try {
+      // 1️⃣ Create the sale
       const sale = await createSale(salePayload).unwrap();
       toast.success("Sale completed successfully!");
-      if (sale.receiptLink) window.open(sale.receiptLink, "_blank");
+
+      // 2️⃣ Open receipt in a new tab
+      const openReceipt = (saleId) => {
+        const receiptUrl = `http://localhost:3000/saleService/sales/${saleId}/receipt`;
+        window.open(receiptUrl, "_blank", "noopener,noreferrer");
+      };
+      openReceipt(sale.saleID);
+
+      // 3️⃣ Send receipt to customer via email
+      if (customer?.email) {
+        try {
+          await fetch("/api/send-receipt-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              saleId: sale.id,
+              customerEmail: customer.email,
+            }),
+          });
+          toast.info("Receipt has been emailed to the customer.");
+        } catch (emailErr) {
+          console.error(emailErr);
+          toast.error("Failed to send receipt email.");
+        }
+      }
+
+      // 4️⃣ Navigate after checkout
       navigate(isCustomer ? "/catalog" : "/");
     } catch (err) {
       if (pointsSpent > 0) {
         toast.error("You need more loyalty points to pay the full amount.");
+        return;
       }
       toast.error(err?.data?.message || "Checkout failed.");
     }
