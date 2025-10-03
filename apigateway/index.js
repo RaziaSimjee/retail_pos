@@ -52,9 +52,8 @@ const services = [
   //   roles: ['admin']
   // },
   {
-    route: '/sales',          // Requires login (any role)
-    target: 'http://localhost:8002/',
-    protected: true
+    route: '/saleService',          // Requires login (any role)
+    target: 'http://localhost:5111/',
   },
 
 ];

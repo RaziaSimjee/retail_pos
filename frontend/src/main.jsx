@@ -15,6 +15,7 @@ import HomeScreen from "./screens/HomeScreen.jsx";
 import ProductsAdminScreen from "./screens/ProductsAdminScreen.jsx";
 import ProductVariantAdminScreen from "./screens/ProductVaraintAdminScreen.jsx";
 import Catalog from "./screens/Catalog.jsx";
+import Checkout from "./screens/Checkout.jsx";
 import SerialNumbers from "./components/SerialNumbers.jsx";
 import BrandsAdminScreen from "./screens/BrandsAdminScreen.jsx";
 import CategoriesAdminScreen from "./screens/CategoriesAdminScreen.jsx";
@@ -75,6 +76,7 @@ const router = createBrowserRouter(
           <Route path="productsizes" element={<ProductSizesAdminScreen />} />
           <Route path="productsizes/:id" element={<ProductSizeDetails />} />
           <Route path="serialnumbers" element={<SerialNumbers />} />
+          <Route path="checkout" element={<Checkout />} />
 
         </Route>
 
