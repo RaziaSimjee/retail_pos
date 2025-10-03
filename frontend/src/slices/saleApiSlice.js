@@ -13,9 +13,20 @@ export const saleSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Category"],
     }),
+    getReceiptById: builder.query({
+      query: (id) => ({
+        url: `${API_GATEWAY_URL}/saleService/sales/${id}/receipt`,
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      providesTags: ["Category"],
+    }),
   }),
 });
 
 export const {
-  useCreateSaleMutation
+  useCreateSaleMutation,
+    useGetReceiptByIdQuery,
 } = saleSlice;

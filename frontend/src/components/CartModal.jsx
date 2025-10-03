@@ -2,9 +2,10 @@ import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeFromCart, adjustQty } from "../slices/cartSlice";
 import { toast } from "react-toastify";
-
+import { useNavigate } from "react-router-dom";
 export default function CartModal({ isOpen, onClose }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { cartItems = [] } = useSelector((state) => state.cart || {});
 
   if (!isOpen) return null;
@@ -20,6 +21,11 @@ export default function CartModal({ isOpen, onClose }) {
   const handleDecrease = (item) => {
     if (item.qty <= 1) return;
     dispatch(adjustQty({ id: item._id, qty: item.qty - 1 }));
+  };
+
+   const handleCheckoutClick = () => {
+    onClose(); // close the modal
+    navigate("/checkout"); // redirect to checkout page
   };
 
   // Calculate total quantity and subtotal
@@ -98,8 +104,11 @@ export default function CartModal({ isOpen, onClose }) {
       {cartItems.length > 0 && (
         <div className="mt-6 border-t pt-4 space-y-2">
           <p>Total Quantity: {totalQuantity}</p>
-          <p className="text-gray-900 text-lg font-medium">Subtotal: {subtotal} Ks</p>
-          <button className="mt-4 w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition">
+          <p className="text-gray-900 text-lg font-medium">
+            Subtotal: {subtotal} Ks
+          </p>
+          <button  onClick={handleCheckoutClick}
+          className="mt-4 w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition">
             Checkout
           </button>
         </div>

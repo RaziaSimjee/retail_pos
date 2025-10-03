@@ -12,6 +12,7 @@ import userAddressRouter from './routes/userAddressRoutes.js';
 import SupplierRoutes from './routes/supplierRoutes.js';
 import connectDB from './db.js';
 import { authenticateJWT, authorizeRoles } from './middleware/auth.js';
+import emailRoutes from "./routes/emailRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -102,6 +103,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use('/api/users', router);
 app.use('/api/addresses', userAddressRouter);
 app.use('/api/suppliers', SupplierRoutes);
+app.use("/api", emailRoutes);
 // ===== Base Route =====
 app.get('/', (req, res) => {
   res.send('✅ Welcome to the API Gateway');

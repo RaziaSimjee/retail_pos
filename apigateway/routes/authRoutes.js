@@ -8,6 +8,7 @@ import {
   getUsersByRole,
   forgotPassword,
   resetPassword,
+  getUserById
 } from "../controllers/authController.js";
 
 const router = express.Router();
@@ -20,5 +21,6 @@ router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
 router.post("/logout", logout);
 router.get("/role/:role", getUsersByRole);
+router.get("/:id", getUserById);
 
 export default router;

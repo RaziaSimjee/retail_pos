@@ -342,3 +342,28 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message || "Server error" });
   }
 };
+
+// ===== GET USER BY ID =====
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate MongoDB ObjectId
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const user = await User.findById(id).select(
+      "username email userRole DOB phoneNumber description isActive customerId"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Get user by ID error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+};
