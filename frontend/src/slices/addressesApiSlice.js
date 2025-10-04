@@ -10,7 +10,10 @@ export const addressesApiSlice = apiSlice.injectEndpoints({
       query: (userId) => `/api/addresses/users/${userId}`,
       providesTags: ["Addresses"],
     }),
-
+    getAddressById: builder.query({
+      query: (id) => `/api/addresses/${id}`,
+      providesTags: ["Addresses"],
+    }),
     addAddress: builder.mutation({
       query: (address) => ({
         url: "/api/addresses",
@@ -40,7 +43,7 @@ export const addressesApiSlice = apiSlice.injectEndpoints({
 export const {
   useGetAllAddressesQuery,
   useGetAddressesByUserIdQuery,
-
+useGetAddressByIdQuery,
   useAddAddressMutation,
   useUpdateAddressMutation,
   useDeleteAddressMutation,

@@ -78,3 +78,20 @@ export const deleteUserAddress = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// ===== GET ADDRESS BY ID =====
+export const getAddressById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: "Address ID is required" });
+
+    const address = await UserAddress.findById(id);
+    if (!address) return res.status(404).json({ message: "Address not found" });
+
+    res.status(200).json({ message: "Address fetched successfully", address });
+  } catch (error) {
+    console.error("Get address by ID error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+};
+

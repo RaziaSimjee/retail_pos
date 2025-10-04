@@ -31,7 +31,6 @@ const ReceiptModal = ({ isOpen, onClose, sale, navigate }) => {
         <div className="flex justify-between mt-6">
           <a
             href={sale.receiptLink}
-            target="_blank"
             rel="noopener noreferrer"
             download
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
