@@ -37,7 +37,7 @@ const saleSchema = new mongoose.Schema({
     default: "unpaid",
   },
   deliveryDate: { type: Date },
-  addressID: { type: Number },
+  addressID: { type: String },
 });
 
 const Sale = mongoose.model("Sale", saleSchema);

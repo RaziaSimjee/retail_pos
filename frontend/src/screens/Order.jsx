@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useGetUserByIdQuery } from "../slices/usersApiSlice";
 import { toast } from "react-toastify";
-
+import { useGetAddressesByUserIdQuery } from "../slices/addressesApiSlice";
 const Order = () => {
   const [sales, setSales] = useState([]);
   const [expandedSaleID, setExpandedSaleID] = useState(null);

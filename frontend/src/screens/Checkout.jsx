@@ -68,18 +68,27 @@ const Checkout = () => {
     useGetUserByCustomerIdQuery(customerId, {
       skip: !customerId || isCustomer,
     });
-console.log(userByCustomer);
-  const { data: addressData, isLoading: addressLoading } =
-    useGetAddressesByUserIdQuery(
-      isCustomer ? userInfo?.user?.userID : userByCustomer?.id,
-      {
-        skip:
-          deliveryOption !== "delivery" ||
-          !(isCustomer ? userInfo?.user?.userID : userByCustomer?.id),
-      }
-    );
+  console.log(userByCustomer);
+  // Fetch the userID to get addresses
+  const selectedUserId = isCustomer
+    ? userInfo?.user?.userID
+    : userByCustomer?.userID;
+
+  console.log(selectedUserId);
+  // Fetch addresses only if delivery is selected
+  const {
+    data: addressData,
+    isLoading: addressLoading,
+    isError: addressError,
+  } = useGetAddressesByUserIdQuery(
+    deliveryOption === "delivery" && selectedUserId
+      ? selectedUserId
+      : skipToken,
+    { skip: deliveryOption !== "delivery" }
+  );
 
   const addresses = addressData?.addresses || [];
+  console.log(addresses);
 
   const [createSale, { isLoading: isCheckoutLoading }] =
     useCreateSaleMutation();
@@ -139,6 +148,10 @@ console.log(userByCustomer);
       productList,
     };
 
+    if (deliveryOption === "delivery" && !selectedAddressId) {
+      return toast.error("Please select a delivery address.");
+    }
+
     try {
       // 1️⃣ Create the sale
       const sale = await createSale(salePayload).unwrap();
@@ -152,6 +165,7 @@ console.log(userByCustomer);
         orderStatus: "pending",
         paymentStatus: "pending",
         deliveryOption: "delivery",
+        addressID: deliveryOption === "delivery" ? selectedAddressId : null,
         deliveryDate:
           deliveryOption === "delivery"
             ? new Date(Date.now() + 2 * 864e5)
@@ -311,21 +325,22 @@ console.log(userByCustomer);
           )}
 
           {/* here */}
-          {/* Delivery addresses section */}
           {deliveryOption === "delivery" && (
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Select Delivery Address</h3>
 
-              {addressLoading ? (
-                <p>Loading addresses...</p>
-              ) : addresses.length === 0 ? (
-                <p className="text-gray-500">
-                  No addresses found for this customer.
-                </p>
-              ) : (
+              {addressLoading && <p>Loading addresses...</p>}
+              {addressError && (
+                <p className="text-red-500">Failed to load addresses.</p>
+              )}
+              {!addressLoading && addresses.length === 0 && (
+                <p className="text-gray-500">No addresses found.</p>
+              )}
+
+              {addresses.length > 0 && (
                 <div
                   className={`space-y-3 border p-3 rounded ${
-                    addresses.length > 2 ? "max-h-64 overflow-y-auto" : ""
+                    addresses.length > 1 ? "max-h-64 overflow-y-auto" : ""
                   }`}
                 >
                   {addresses.map((addr) => (
@@ -337,6 +352,7 @@ console.log(userByCustomer);
                           : "border-gray-300"
                       }`}
                     >
+                      {/* Accordion Header */}
                       <div
                         className="flex justify-between items-center cursor-pointer"
                         onClick={() =>
@@ -370,6 +386,7 @@ console.log(userByCustomer);
                         </span>
                       </div>
 
+                      {/* Accordion Content */}
                       {expandedAddress === addr.addressID && (
                         <div className="mt-2 text-sm text-gray-700 space-y-1">
                           <p>
