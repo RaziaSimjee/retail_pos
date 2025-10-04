@@ -369,3 +369,27 @@ export const getUserById = async (req, res) => {
     res.status(500).json({ message: error.message || "Server error" });
   }
 };
+
+// ===== GET USER BY CUSTOMER ID =====
+export const getUserByCustomerId = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    if (!customerId) {
+      return res.status(400).json({ message: "Customer ID is required" });
+    }
+
+     const numericCustomerID = Number(customerId);
+
+    // Find user by the customerId field
+    const user = await User.findOne({ "customerId": numericCustomerID })
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found for given customerId" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Get user by customerId error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+};

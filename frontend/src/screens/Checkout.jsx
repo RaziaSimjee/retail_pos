@@ -9,6 +9,9 @@ import {
   useGetCustomerByIdQuery,
 } from "../slices/loyaltyProgramApiSlice.js";
 import { useGetUserByIdQuery } from "../slices/usersApiSlice";
+import { useGetAddressesByUserIdQuery } from "../slices/addressesApiSlice";
+import { useGetUserByCustomerIdQuery } from "../slices/usersApiSlice";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 import CartModal from "../components/CartModal.jsx";
 import ReceiptModal from "../components/ReceiptModal.jsx";
@@ -30,7 +33,11 @@ const Checkout = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [receiptSale, setReceiptSale] = useState(null);
-
+  const [orderStatus, setOrderStatus] = useState("pending"); // cashier only
+  const [paymentStatus, setPaymentStatus] = useState("pending"); // cashier only
+  const [deliveryOption, setDeliveryOption] = useState("delivery"); // cashier only
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [expandedAddress, setExpandedAddress] = useState(null);
   // Fetch all customers for cashier
   const {
     data: allCustomers = [],
@@ -56,6 +63,23 @@ const Checkout = () => {
 
   const isLoading = isCustomer ? userLoading || customerLoading : allLoading;
   const isError = allError;
+
+  const { data: userByCustomer, isLoading: userByCustomerLoading } =
+    useGetUserByCustomerIdQuery(customerId, {
+      skip: !customerId || isCustomer,
+    });
+console.log(userByCustomer);
+  const { data: addressData, isLoading: addressLoading } =
+    useGetAddressesByUserIdQuery(
+      isCustomer ? userInfo?.user?.userID : userByCustomer?.id,
+      {
+        skip:
+          deliveryOption !== "delivery" ||
+          !(isCustomer ? userInfo?.user?.userID : userByCustomer?.id),
+      }
+    );
+
+  const addresses = addressData?.addresses || [];
 
   const [createSale, { isLoading: isCheckoutLoading }] =
     useCreateSaleMutation();
@@ -123,6 +147,35 @@ const Checkout = () => {
       dispatch(resetCart());
       // 3️⃣ Show receipt modal
       openReceipt(sale);
+      let finalSale = {
+        ...sale,
+        orderStatus: "pending",
+        paymentStatus: "pending",
+        deliveryOption: "delivery",
+        deliveryDate:
+          deliveryOption === "delivery"
+            ? new Date(Date.now() + 2 * 864e5)
+            : null,
+      };
+      if (!isCustomer && userInfo.user.role === "cashier") {
+        if (deliveryOption === "pickup") {
+          finalSale.orderStatus = "completed";
+          finalSale.paymentStatus = "completed";
+        } else {
+          finalSale.orderStatus = orderStatus;
+          finalSale.paymentStatus = paymentStatus;
+        }
+        finalSale.deliveryOption = deliveryOption;
+      }
+
+      // 3️⃣ Save final sale object to MongoDB
+      await fetch("http://localhost:3000/api/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(finalSale),
+      });
+
+      toast.info("Sale saved to database with order and payment status.");
 
       // 4️⃣ Send receipt to customer via email
       if (customer?.email) {
@@ -167,7 +220,6 @@ const Checkout = () => {
           Go to Catalog
         </button>
       </div>
-
       {/* Modals */}
       <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <ReceiptModal
@@ -176,9 +228,7 @@ const Checkout = () => {
         sale={receiptSale}
         navigate={navigate}
       />
-
       <h1 className="text-2xl font-bold mb-6">Checkout</h1>
-
       {/* Customer selection for cashier */}
       {!isCustomer && (
         <div className="mb-4">
@@ -211,7 +261,6 @@ const Checkout = () => {
           )}
         </div>
       )}
-
       {/* Loyalty Points */}
       {customer && (
         <div className="mt-3 p-3 border rounded bg-gray-50 mb-4">
@@ -236,7 +285,141 @@ const Checkout = () => {
           </div>
         </div>
       )}
+      {/* Order options for cashier */}
+      {!isCustomer && userInfo.user.role === "cashier" && (
+        <div className="mb-6 p-4 border rounded bg-gray-50 space-y-3">
+          <h3 className="font-semibold">Order Options (Cashier)</h3>
 
+          {/* Delivery or Pickup */}
+          <div>
+            <label className="block mb-1 font-medium">Delivery Option</label>
+            <select
+              value={deliveryOption}
+              onChange={(e) => setDeliveryOption(e.target.value)}
+              className="border rounded p-2 w-40"
+            >
+              <option value="delivery">Delivery</option>
+              <option value="pickup">Pickup</option>
+            </select>
+          </div>
+
+          {deliveryOption === "delivery" && (
+            <p className="mt-2 text-gray-700">
+              Estimated Delivery Date:{" "}
+              {new Date(Date.now() + 2 * 864e5).toLocaleDateString()}
+            </p>
+          )}
+
+          {/* here */}
+          {/* Delivery addresses section */}
+          {deliveryOption === "delivery" && (
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">Select Delivery Address</h3>
+
+              {addressLoading ? (
+                <p>Loading addresses...</p>
+              ) : addresses.length === 0 ? (
+                <p className="text-gray-500">
+                  No addresses found for this customer.
+                </p>
+              ) : (
+                <div
+                  className={`space-y-3 border p-3 rounded ${
+                    addresses.length > 2 ? "max-h-64 overflow-y-auto" : ""
+                  }`}
+                >
+                  {addresses.map((addr) => (
+                    <div
+                      key={addr.addressID}
+                      className={`border rounded-lg p-3 ${
+                        selectedAddressId === addr.addressID
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() =>
+                          setExpandedAddress(
+                            expandedAddress === addr.addressID
+                              ? null
+                              : addr.addressID
+                          )
+                        }
+                      >
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="selectedAddress"
+                            value={addr.addressID}
+                            checked={selectedAddressId === addr.addressID}
+                            onChange={() =>
+                              setSelectedAddressId(addr.addressID)
+                            }
+                          />
+                          <span className="font-medium">{addr.label}</span>
+                        </label>
+                        <span
+                          className={`transition-transform ${
+                            expandedAddress === addr.addressID
+                              ? "rotate-180"
+                              : ""
+                          }`}
+                        >
+                          ⌄
+                        </span>
+                      </div>
+
+                      {expandedAddress === addr.addressID && (
+                        <div className="mt-2 text-sm text-gray-700 space-y-1">
+                          <p>
+                            {addr.buildingNo}, {addr.laneNo}, {addr.town}
+                          </p>
+                          <p>
+                            {addr.state}, {addr.country}, {addr.zipcode}
+                          </p>
+                          {addr.floor && <p>Floor: {addr.floor}</p>}
+                          {addr.roomNo && <p>Room: {addr.roomNo}</p>}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Only show order/payment status if delivery */}
+          {deliveryOption === "delivery" && (
+            <div className="flex gap-4 mt-2">
+              <div>
+                <label className="block mb-1 font-medium">Order Status</label>
+                <select
+                  value={orderStatus}
+                  onChange={(e) => setOrderStatus(e.target.value)}
+                  className="border rounded p-2 w-40"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="canceled">Canceled</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">Payment Status</label>
+                <select
+                  value={paymentStatus}
+                  onChange={(e) => setPaymentStatus(e.target.value)}
+                  className="border rounded p-2 w-40"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {/* Tax & Discount for cashier */}
       {!isCustomer && (
         <div className="flex gap-4 mb-6">
@@ -264,7 +447,6 @@ const Checkout = () => {
           </div>
         </div>
       )}
-
       {/* Customer info */}
       {isCustomer && (
         <div className="mb-6 p-3 border rounded bg-gray-50 space-y-1">
@@ -279,7 +461,6 @@ const Checkout = () => {
           </p>
         </div>
       )}
-
       {/* Order summary */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Order Summary</h2>
@@ -293,7 +474,6 @@ const Checkout = () => {
         ))}
         <p className="mt-2 font-bold">Subtotal: {subtotal.toFixed(2)} Ks</p>
       </div>
-
       {/* Calculation summary */}
       <div className="mb-6 p-4 border rounded bg-gray-50 space-y-1">
         <p>Points Spent: {pointsSpent}</p>
@@ -312,7 +492,6 @@ const Checkout = () => {
           ⚠️ Final total will include loyalty point adjustment.
         </p>
       </div>
-
       <button
         onClick={handleCheckout}
         disabled={isCheckoutLoading}

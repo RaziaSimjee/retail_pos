@@ -31,4 +31,72 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.get("/:customerId", async (req, res) => {
+  try {
+    const customerId = parseInt(req.params.customerId);
+
+    if (!customerId) {
+      return res.status(400).json({ message: "Invalid customer ID" });
+    }
+
+    const sales = await Sale.find({ customerId }).sort({ saleDate: -1 });
+
+    if (!sales || sales.length === 0) {
+      return res.status(404).json({ message: "No sales found for this customer" });
+    }
+
+    res.status(200).json(sales);
+  } catch (err) {
+    console.error("Error fetching sales by customerID:", err);
+    res.status(500).json({ message: err.message || "Server error" });
+  }
+});
+
+router.get("/", async (req, res) => {
+  try {
+    const sales = await Sale.find().sort({ saleDate: -1 }); // newest first
+    res.status(200).json(sales);
+  } catch (err) {
+    console.error("Error fetching all sales:", err);
+    res.status(500).json({ message: err.message || "Server error" });
+  }
+});
+
+// PATCH /api/sales/update/:saleID -> update orderStatus or paymentStatus
+router.patch("/update/:saleID", async (req, res) => {
+  try {
+    const { saleID } = req.params;
+    const { orderStatus, paymentStatus } = req.body;
+
+    // Validate saleID
+    if (!saleID) return res.status(400).json({ message: "Sale ID is required" });
+
+    // Validate allowed statuses
+    const allowedStatuses = ["pending", "completed", "cancelled"];
+    if (orderStatus && !allowedStatuses.includes(orderStatus))
+      return res.status(400).json({ message: "Invalid orderStatus value" });
+
+    if (paymentStatus && !allowedStatuses.includes(paymentStatus))
+      return res.status(400).json({ message: "Invalid paymentStatus value" });
+
+    // Find the sale
+    const sale = await Sale.findOne({ saleID: parseInt(saleID) });
+    if (!sale) return res.status(404).json({ message: "Sale not found" });
+
+    // Update fields if provided
+    if (orderStatus) sale.orderStatus = orderStatus;
+    if (paymentStatus) sale.paymentStatus = paymentStatus;
+
+    await sale.save();
+
+    res.status(200).json({ message: "Sale updated successfully", sale });
+  } catch (err) {
+    console.error("Error updating sale:", err);
+    res.status(500).json({ message: err.message || "Server error" });
+  }
+});
+
+
+
+
 export default router;

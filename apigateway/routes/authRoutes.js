@@ -8,7 +8,8 @@ import {
   getUsersByRole,
   forgotPassword,
   resetPassword,
-  getUserById
+  getUserById,
+  getUserByCustomerId
 } from "../controllers/authController.js";
 
 const router = express.Router();
@@ -22,5 +23,6 @@ router.delete("/:id", deleteUser);
 router.post("/logout", logout);
 router.get("/role/:role", getUsersByRole);
 router.get("/:id", getUserById);
+router.get("/customer/:customerId", getUserByCustomerId);
 
 export default router;

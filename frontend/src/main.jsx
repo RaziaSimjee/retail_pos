@@ -24,6 +24,7 @@ import ProductSizesAdminScreen from "./screens/ProductSizesAdminScreen.jsx";
 import UsersAdminScreen from "./screens/UsersAdminScreen.jsx";
 import SuppliersAdminScreen from "./screens/SuppliersAdminScreen.jsx";
 import NotFoundScreen from "./screens/NotFoundScreen.jsx";
+import Order from "./screens/Order.jsx";
 // Components
 import ProductDetails from "./components/ProductDetails.jsx";
 import ProductSizeDetails from "./components/ProductSizeDetails.jsx";
@@ -76,7 +77,7 @@ const router = createBrowserRouter(
           <Route path="productsizes/:id" element={<ProductSizeDetails />} />
           <Route path="serialnumbers" element={<SerialNumbers />} />
           <Route path="checkout" element={<Checkout />} />
-
+<Route path="orders" element={<Order />} />
         </Route>
 
         {/* Catch-all 404 */}

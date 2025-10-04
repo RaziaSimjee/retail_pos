@@ -28,14 +28,16 @@ const saleSchema = new mongoose.Schema({
   receiptLink: { type: String },
   orderStatus: {
     type: String,
-    enum: ["pending", "processed", "completed", "cancelled"],
+    enum: ["pending",  "completed", "cancelled"],
     default: "pending",
   },
   paymentStatus: {
     type: String,
-    enum: ["unpaid", "paid", "failed", "refunded"],
+    enum: ["pending",  "completed", "cancelled"],
     default: "unpaid",
   },
+  deliveryDate: { type: Date },
+  addressID: { type: Number },
 });
 
 const Sale = mongoose.model("Sale", saleSchema);
