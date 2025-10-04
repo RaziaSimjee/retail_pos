@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import { resetCart } from "../slices/cartSlice";
 import { useCreateSaleMutation } from "../slices/saleApiSlice.js";
 import {
   useGetAllCustomersQuery,
@@ -11,9 +11,11 @@ import {
 import { useGetUserByIdQuery } from "../slices/usersApiSlice";
 
 import CartModal from "../components/CartModal.jsx";
+import ReceiptModal from "../components/ReceiptModal.jsx";
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { cartItems = [] } = useSelector((state) => state.cart || {});
   const { userInfo } = useSelector((state) => state.auth);
 
@@ -26,6 +28,8 @@ const Checkout = () => {
   const [pointsSpent, setPointsSpent] = useState(0);
   const [availablePoints, setAvailablePoints] = useState(0);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [receiptSale, setReceiptSale] = useState(null);
 
   // Fetch all customers for cashier
   const {
@@ -86,10 +90,13 @@ const Checkout = () => {
     return d.toLocaleDateString();
   }, []);
 
-  const openReceipt = (saleId) => {
-    const receiptUrl = `http://localhost:3000/saleService/sales/${saleId}/receipt`;
-    // Open in new tab directly, letting the browser handle it
-    window.open(receiptUrl, "_blank", "noopener,noreferrer");
+  // ✅ Open receipt modal instead of new tab
+  const openReceipt = (sale) => {
+    setReceiptSale({
+      ...sale,
+      receiptLink: `http://localhost:3000/saleService/sales/${sale.saleID}/receipt`,
+    });
+    setIsReceiptOpen(true);
   };
 
   const handleCheckout = async () => {
@@ -112,22 +119,19 @@ const Checkout = () => {
       // 1️⃣ Create the sale
       const sale = await createSale(salePayload).unwrap();
       toast.success("Sale completed successfully!");
+      // 2️⃣ Clear the cart after successful sale
+      dispatch(resetCart());
+      // 3️⃣ Show receipt modal
+      openReceipt(sale);
 
-      // 2️⃣ Open receipt in a new tab
-      const openReceipt = (saleId) => {
-        const receiptUrl = `http://localhost:3000/saleService/sales/${saleId}/receipt`;
-        window.open(receiptUrl, "_blank", "noopener,noreferrer");
-      };
-      openReceipt(sale.saleID);
-
-      // 3️⃣ Send receipt to customer via email
+      // 4️⃣ Send receipt to customer via email
       if (customer?.email) {
         try {
           await fetch("/api/send-receipt-email", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              saleId: sale.id,
+              saleId: sale.saleID,
               customerEmail: customer.email,
             }),
           });
@@ -137,9 +141,6 @@ const Checkout = () => {
           toast.error("Failed to send receipt email.");
         }
       }
-
-      // 4️⃣ Navigate after checkout
-      navigate(isCustomer ? "/catalog" : "/");
     } catch (err) {
       if (pointsSpent > 0) {
         toast.error("You need more loyalty points to pay the full amount.");
@@ -167,7 +168,14 @@ const Checkout = () => {
         </button>
       </div>
 
+      {/* Modals */}
       <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <ReceiptModal
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+        sale={receiptSale}
+        navigate={navigate}
+      />
 
       <h1 className="text-2xl font-bold mb-6">Checkout</h1>
 

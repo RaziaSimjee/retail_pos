@@ -51,6 +51,7 @@ export default function Sidebar({
       ],
     },
     { to: "/catalog", label: "Catalog", icon: HomeIcon },
+    { to: "/payment", label: "Payment", icon: HomeIcon },
     { to: "/taxrule", label: "Tax rule", icon: HomeIcon },
     { to: "/orders", label: "Orders", icon: ClipboardDocumentListIcon },
     {

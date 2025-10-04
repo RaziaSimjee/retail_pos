@@ -13,6 +13,7 @@ import SupplierRoutes from './routes/supplierRoutes.js';
 import connectDB from './db.js';
 import { authenticateJWT, authorizeRoles } from './middleware/auth.js';
 import emailRoutes from "./routes/emailRoutes.js";
+import saleRoutes from "./routes/saleRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -44,7 +45,7 @@ const services = [
   {
     route: '/productcatalog', // PUBLIC route
     target: 'http://localhost:8000/',
-    protected: false
+
   },
   // {
   //   route: '/users',          // Requires Admin
@@ -104,6 +105,7 @@ app.use('/api/users', router);
 app.use('/api/addresses', userAddressRouter);
 app.use('/api/suppliers', SupplierRoutes);
 app.use("/api", emailRoutes);
+app.use("/api/sales", saleRoutes);
 // ===== Base Route =====
 app.get('/', (req, res) => {
   res.send('✅ Welcome to the API Gateway');

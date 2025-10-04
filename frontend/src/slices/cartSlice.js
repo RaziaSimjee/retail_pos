@@ -69,7 +69,9 @@ const cartSlice = createSlice({
     adjustQty: (state, action) => {
       const { id, qty } = action.payload;
       state.cartItems = state.cartItems.map((x) =>
-        x._id === id ? { ...x, qty: Math.min(Math.max(Number(qty), 1), x.quantity) } : x
+        x._id === id
+          ? { ...x, qty: Math.min(Math.max(Number(qty), 1), x.quantity) }
+          : x
       );
 
       // Recalculate totals
@@ -86,8 +88,19 @@ const cartSlice = createSlice({
 
       localStorage.setItem("cart", JSON.stringify(state));
     },
+
+    // 🆕 Reset the cart after checkout
+    resetCart: (state) => {
+      state.cartItems = [];
+      state.itemsPrice = 0;
+      state.shippingPrice = 0;
+      state.taxPrice = 0;
+      state.totalPrice = 0;
+      localStorage.removeItem("cart");
+    },
   },
 });
 
-export const { addToCart, removeFromCart, adjustQty } = cartSlice.actions;
+export const { addToCart, removeFromCart, adjustQty, resetCart } =
+  cartSlice.actions;
 export default cartSlice.reducer;

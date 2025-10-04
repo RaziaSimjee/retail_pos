@@ -17,9 +17,17 @@ export default function LoginScreen() {
 
   const [login, { isLoading }] = useLoginMutation();
 
-  useEffect(() => {
-    if (userInfo) navigate("/dashboard");
-  }, [userInfo, navigate]);
+useEffect(() => {
+  if (userInfo) {
+    // Redirect based on role
+    if (userInfo.user.role === "customer" || userInfo.user.role === "cashier") {
+      navigate("/catalog");
+    } else {
+      navigate("/dashboard");
+    }
+  }
+}, [userInfo, navigate]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,14 +51,21 @@ export default function LoginScreen() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!formData.email || !formData.password) return toast.error("Please fill all fields");
+    if (!formData.email || !formData.password)
+      return toast.error("Please fill all fields");
     if (formErrors.email || formErrors.password) return;
 
     try {
       const res = await login(formData).unwrap();
       dispatch(setCredentials(res));
       toast.success("Login successful!");
-      navigate("/dashboard");
+      console.log(res.user.role);
+      if (res.user.role === "customer" || res.user.role === "cashier") {
+        console.log(res.user.role)
+        navigate("/catalog");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       toast.error(err?.data?.message || "Login failed");
     }
@@ -73,7 +88,9 @@ export default function LoginScreen() {
               required
               className="w-full border px-3 py-2 rounded"
             />
-            {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
+            {formErrors.email && (
+              <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+            )}
           </div>
 
           {/* Password */}
@@ -91,9 +108,15 @@ export default function LoginScreen() {
               className="absolute top-9 right-3 cursor-pointer text-gray-500"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <AiOutlineEye size={20} /> : <AiOutlineEyeInvisible size={20} />}
+              {showPassword ? (
+                <AiOutlineEye size={20} />
+              ) : (
+                <AiOutlineEyeInvisible size={20} />
+              )}
             </span>
-            {formErrors.password && <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>}
+            {formErrors.password && (
+              <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
+            )}
           </div>
 
           {/* Submit */}

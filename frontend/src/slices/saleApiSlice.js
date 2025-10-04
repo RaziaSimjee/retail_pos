@@ -11,7 +11,17 @@ export const saleSlice = apiSlice.injectEndpoints({
           "Content-Type": "application/json",
         },
       }),
-      invalidatesTags: ["Category"],
+      invalidatesTags: ["Sales"],
+    }),
+    getAllSales: builder.query({
+      query: ({ skip = 0, take = 100 }) => ({
+        url: `${API_GATEWAY_URL}/saleService/sales/${skip}/${take}`,
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      providesTags: ["Sales"],
     }),
     getReceiptById: builder.query({
       query: (id) => ({
@@ -21,12 +31,13 @@ export const saleSlice = apiSlice.injectEndpoints({
           "Content-Type": "application/json",
         },
       }),
-      providesTags: ["Category"],
+      providesTags: ["Sales"],
     }),
   }),
 });
 
 export const {
   useCreateSaleMutation,
-    useGetReceiptByIdQuery,
+  useGetReceiptByIdQuery,
+  useGetAllSalesQuery,
 } = saleSlice;

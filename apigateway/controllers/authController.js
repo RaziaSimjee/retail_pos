@@ -147,6 +147,7 @@ export const login = async (req, res) => {
 };
 
 // UPDATE
+// UPDATE USER
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -160,10 +161,10 @@ export const updateUser = async (req, res) => {
       description,
     } = req.body;
 
-    // Check if email is being updated and is unique
+    // Check if email is being updated and is unique (excluding current user)
     if (email) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser && existingUser._id.toString() !== id) {
+      const existingUser = await User.findOne({ email, _id: { $ne: id } });
+      if (existingUser) {
         return res
           .status(400)
           .json({ message: `Email "${email}" is already registered` });
@@ -195,6 +196,7 @@ export const updateUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // DELETE
 export const deleteUser = async (req, res) => {

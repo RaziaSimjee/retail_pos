@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { useRegisterMutation, useCreateCustomerLoyaltyAccountMutation } from "../slices/usersApiSlice.js";
+import {
+  useRegisterMutation,
+  useCreateCustomerLoyaltyAccountMutation,
+} from "../slices/usersApiSlice.js";
 import { setCredentials } from "../slices/authSlice.js";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
@@ -35,10 +38,17 @@ export default function RegisterScreen() {
   const [register, { isLoading }] = useRegisterMutation();
   const [createLoyaltyAccount] = useCreateCustomerLoyaltyAccountMutation();
 
-
   useEffect(() => {
-    if (userInfo) navigate("/dashboard");
-  }, [userInfo, navigate]);
+  if (userInfo) {
+    // Redirect based on role
+    if (userInfo.user.role === "customer" || userInfo.user.role === "cashier") {
+      navigate("/catalog");
+    } else {
+      navigate("/dashboard");
+    }
+  }
+}, [userInfo, navigate]);
+
 
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,12}$/;
@@ -115,7 +125,13 @@ export default function RegisterScreen() {
       // Prevent undefined userInfo issues
       if (res?.user) dispatch(setCredentials({ ...res }));
       toast.success("Registration successful!");
-      navigate("/dashboard");
+      // Redirect based on role
+      console.log(res.user.role);
+      if (res.user.role === "customer" || res.user.role === "cashier") {
+        navigate("/catalog");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       if (err?.data?.errors) {
         Object.values(err.data.errors).forEach((error) =>

@@ -55,7 +55,6 @@ const router = createBrowserRouter(
         <Route path="register" element={<RegisterForm />} />
         <Route path="forgotPassword" element={<ForgotPasswordScreen />} />
         
-        {/* Admin Dashboard */}
         <Route element={<Layout />}>
           <Route path="dashboard" element={<HomeScreen />} />
           <Route path="catalog" element={<Catalog />} />
