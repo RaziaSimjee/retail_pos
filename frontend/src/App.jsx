@@ -6,7 +6,9 @@ export default function App() {
   return (
     <>
       <ToastContainer /> {/* Global toast notifications */}
-      <Outlet />
+      <Layout>
+        <Outlet />
+      </Layout>
     </>
   );
 }

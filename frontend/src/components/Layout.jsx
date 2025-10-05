@@ -3,17 +3,19 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar.jsx";
 import Topbar from "./Topbar.jsx";
 
-export default function Layout() {
+export default function Layout({ children }) {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // User role from localStorage
   const userInfo = localStorage.getItem("userInfo")
     ? JSON.parse(localStorage.getItem("userInfo"))
     : null;
-  const allowedRoles = ["admin", "manager", "cashier"];
-  const showSidebar = userInfo && allowedRoles.includes(userInfo.user?.role?.toLowerCase());
+
+  const role = userInfo?.user?.role?.toLowerCase() || "public";
+
+  const allowedRoles = ["admin", "manager"];
+  const showSidebar = allowedRoles.includes(role);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -21,8 +23,6 @@ export default function Layout() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const isMobile = windowWidth < 768;
-  const isTablet = windowWidth >= 768 && windowWidth < 1024;
   const isDesktop = windowWidth >= 1024;
 
   useEffect(() => {
@@ -39,9 +39,11 @@ export default function Layout() {
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Topbar
-        isMobile={isMobile || isTablet}
-        isOpen={isSidebarOpen}
+        role={role}
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        sidebarWidth={
+          isDesktop && showSidebar ? (isSidebarCollapsed ? 64 : 280) : 0
+        }
       />
 
       <div className="flex flex-1 relative">
@@ -49,8 +51,6 @@ export default function Layout() {
           <Sidebar
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
-            isMobile={isMobile}
-            isTablet={isTablet}
             isOpen={isSidebarOpen}
             setIsOpen={setIsSidebarOpen}
           />
@@ -60,7 +60,7 @@ export default function Layout() {
           className="flex-1 transition-all duration-300 overflow-auto"
           style={{ marginLeft: isDesktop && showSidebar ? sidebarWidth : 0 }}
         >
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
     </div>

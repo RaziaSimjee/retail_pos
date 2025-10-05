@@ -12,7 +12,8 @@ import { useGetUserByIdQuery } from "../slices/usersApiSlice";
 import { useGetAddressesByUserIdQuery } from "../slices/addressesApiSlice";
 import { useGetUserByCustomerIdQuery } from "../slices/usersApiSlice";
 import { skipToken } from "@reduxjs/toolkit/query";
-
+import UserForm from "../components/UserForm.jsx";
+import { useRegisterMutation } from "../slices/usersApiSlice.js";
 import CartModal from "../components/CartModal.jsx";
 import ReceiptModal from "../components/ReceiptModal.jsx";
 
@@ -38,12 +39,15 @@ const Checkout = () => {
   const [deliveryOption, setDeliveryOption] = useState("delivery"); // cashier only
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [expandedAddress, setExpandedAddress] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [loadingAction, setLoadingAction] = useState(false);
   // Fetch all customers for cashier
   const {
     data: allCustomers = [],
     isLoading: allLoading,
     isError: allError,
   } = useGetAllCustomersQuery({ skip: 0, take: 100 });
+  const [registerUser, refetch] = useRegisterMutation();
 
   // Fetch customer info if logged in as customer
   const { data: userData, isLoading: userLoading } = useGetUserByIdQuery(
@@ -130,6 +134,20 @@ const Checkout = () => {
       receiptLink: `http://localhost:3000/saleService/sales/${sale.saleID}/receipt`,
     });
     setIsReceiptOpen(true);
+  };
+  // handle add customer
+  const handleAddSubmit = async (formData) => {
+    setLoadingAction(true);
+    try {
+      await registerUser(formData).unwrap();
+      toast.success("Customer registered successfully");
+      refetch();
+      setShowAddModal(false);
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to add customer");
+    } finally {
+      setLoadingAction(false);
+    }
   };
 
   const handleCheckout = async () => {
@@ -266,7 +284,7 @@ const Checkout = () => {
                 ))}
               </select>
               <button
-                onClick={() => navigate("/register")}
+                onClick={() => setShowAddModal(true)}
                 className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 transition"
               >
                 Create New Customer
@@ -516,6 +534,23 @@ const Checkout = () => {
       >
         {isCheckoutLoading ? "Processing..." : "Confirm Checkout"}
       </button>
+      {/* Add New Customer Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto">
+          <div className="bg-white p-6 rounded-3xl shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <h3 className="text-2xl font-bold mb-6 text-center">
+              Add New Customer
+            </h3>
+            <UserForm
+              role="customer"
+              onSubmit={handleAddSubmit}
+              onCancel={() => setShowAddModal(false)}
+              isLoading={loadingAction}
+              submitText="Add"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

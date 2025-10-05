@@ -29,6 +29,7 @@ import Order from "./screens/Order.jsx";
 import ProductDetails from "./components/ProductDetails.jsx";
 import ProductSizeDetails from "./components/ProductSizeDetails.jsx";
 import ProductVariantDetails from "./components/ProductVariantDetails.jsx";
+
 // Api Slices
 import store from "./store";
 // Layouts
@@ -51,34 +52,32 @@ const router = createBrowserRouter(
     <>
       <Route path="/" element={<App />}>
         {/* Public routes */}
-        <Route index element={<LoginForm />} />
+
+        <Route index element={<Catalog />} />
         <Route path="login" element={<LoginForm />} />
         <Route path="register" element={<RegisterForm />} />
         <Route path="forgotPassword" element={<ForgotPasswordScreen />} />
-        
-        <Route element={<Layout />}>
-          <Route path="dashboard" element={<HomeScreen />} />
-          <Route path="catalog" element={<Catalog />} />
-          <Route path="users/:role" element={<UsersAdminScreen />} />
-          <Route path="/addresses/:id" element={<AddressesScreen />} />
-          <Route path="/suppliers" element={<SuppliersAdminScreen />} />
-          <Route path="/wallets" element={<Wallets />} />
-          <Route path="/rules" element={<Rules />} />
-          <Route path="/rewards" element={<Rewards />} />
-          <Route path="/spendings" element={<Spendings />} />
-          <Route path="products" element={<ProductsAdminScreen />} />
-          <Route path="productvariants" element={<ProductVariantAdminScreen />} />
-          <Route path="products/:id" element={<ProductDetails />} />
-          <Route path="productVariants/:id" element={<ProductVariantDetails />} />
-          <Route path="brands" element={<BrandsAdminScreen />} />
-          <Route path="categories" element={<CategoriesAdminScreen />} />
-          <Route path="colors" element={<ColorsAdminScreen />} />
-          <Route path="productsizes" element={<ProductSizesAdminScreen />} />
-          <Route path="productsizes/:id" element={<ProductSizeDetails />} />
-          <Route path="serialnumbers" element={<SerialNumbers />} />
-          <Route path="checkout" element={<Checkout />} />
-<Route path="orders" element={<Order />} />
-        </Route>
+        <Route path="catalog" element={<Catalog />} />
+
+        <Route path="users/:role" element={<UsersAdminScreen />} />
+        <Route path="/addresses/:id" element={<AddressesScreen />} />
+        <Route path="/suppliers" element={<SuppliersAdminScreen />} />
+        <Route path="/wallets" element={<Wallets />} />
+        <Route path="/rules" element={<Rules />} />
+        <Route path="/rewards" element={<Rewards />} />
+        <Route path="/spendings" element={<Spendings />} />
+        <Route path="products" element={<ProductsAdminScreen />} />
+        <Route path="productvariants" element={<ProductVariantAdminScreen />} />
+        <Route path="products/:id" element={<ProductDetails />} />
+        <Route path="productVariants/:id" element={<ProductVariantDetails />} />
+        <Route path="brands" element={<BrandsAdminScreen />} />
+        <Route path="categories" element={<CategoriesAdminScreen />} />
+        <Route path="colors" element={<ColorsAdminScreen />} />
+        <Route path="productsizes" element={<ProductSizesAdminScreen />} />
+        <Route path="productsizes/:id" element={<ProductSizeDetails />} />
+        <Route path="serialnumbers" element={<SerialNumbers />} />
+        <Route path="checkout" element={<Checkout />} />
+        <Route path="orders" element={<Order />} />
 
         {/* Catch-all 404 */}
         <Route path="*" element={<NotFoundScreen />} />
