@@ -16,6 +16,8 @@ import UserForm from "../components/UserForm.jsx";
 import { useRegisterMutation } from "../slices/usersApiSlice.js";
 import CartModal from "../components/CartModal.jsx";
 import ReceiptModal from "../components/ReceiptModal.jsx";
+import { FaShoppingCart, FaArrowLeft } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -250,17 +252,25 @@ const Checkout = () => {
     <div className="max-w-3xl mx-auto p-6">
       {/* Links */}
       <div className="flex gap-4 mb-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Link
+            to="/catalog"
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition font-medium"
+          >
+            <FaArrowLeft /> Back to Catalog
+          </Link>
+        </div>
         <button
+          className="fixed bottom-20 right-6 bg-gradient-to-br from-gray-800 to-gray-700 text-white p-3 rounded-full shadow-lg hover:shadow-2xl hover:bg-blue-gray-300 transform transition-all flex items-center justify-center z-50"
           onClick={() => setIsCartOpen(true)}
-          className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition"
+          aria-label="Open Cart"
         >
-          Manage Cart
-        </button>
-        <button
-          onClick={() => navigate("/catalog")}
-          className="bg-gray-500 text-white py-1 px-3 rounded hover:bg-gray-600 transition"
-        >
-          Go to Catalog
+          <FaShoppingCart size={20} />
+          {cartItems.length > 0 && (
+            <span className="absolute top-0 right-0 -mt-1 -mr-2 bg-gray-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+              {cartItems.reduce((a, c) => a + c.qty, 0)}
+            </span>
+          )}
         </button>
       </div>
       {/* Modals */}

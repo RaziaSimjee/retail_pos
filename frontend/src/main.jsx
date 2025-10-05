@@ -29,7 +29,7 @@ import Order from "./screens/Order.jsx";
 import ProductDetails from "./components/ProductDetails.jsx";
 import ProductSizeDetails from "./components/ProductSizeDetails.jsx";
 import ProductVariantDetails from "./components/ProductVariantDetails.jsx";
-
+import Profile from "./screens/profile.jsx";
 // Api Slices
 import store from "./store";
 // Layouts
@@ -78,6 +78,7 @@ const router = createBrowserRouter(
         <Route path="serialnumbers" element={<SerialNumbers />} />
         <Route path="checkout" element={<Checkout />} />
         <Route path="orders" element={<Order />} />
+        <Route path="profile" element={<Profile />} />
 
         {/* Catch-all 404 */}
         <Route path="*" element={<NotFoundScreen />} />

@@ -82,6 +82,12 @@ export default function Topbar({ toggleSidebar, sidebarWidth }) {
               Orders
             </button>
             <button
+              onClick={() => navigate("/catalog")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Catalog
+            </button>
+            <button
               onClick={() => navigate("/profile")}
               className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
             >
@@ -106,6 +112,12 @@ export default function Topbar({ toggleSidebar, sidebarWidth }) {
               className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
             >
               Orders
+            </button>
+            <button
+              onClick={() => navigate("/catalog")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Catalog
             </button>
             <button
               onClick={() => navigate("/profile")}
