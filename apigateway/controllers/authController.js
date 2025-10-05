@@ -146,7 +146,6 @@ export const login = async (req, res) => {
   }
 };
 
-// UPDATE
 // UPDATE USER
 export const updateUser = async (req, res) => {
   try {
@@ -161,41 +160,52 @@ export const updateUser = async (req, res) => {
       description,
     } = req.body;
 
-    // Check if email is being updated and is unique (excluding current user)
-    if (email) {
-      const existingUser = await User.findOne({ email, _id: { $ne: id } });
+    // Find the user by ID
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if email is being updated and is unique
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res
           .status(400)
           .json({ message: `Email "${email}" is already registered` });
       }
+      user.email = email;
     }
 
-    // Build update object only with provided fields
-    const updateFields = {};
-    if (username) updateFields.username = username;
-    if (email) updateFields.email = email;
-    if (userRole) updateFields.userRole = userRole;
-    if (DOB) updateFields.DOB = DOB;
-    if (phoneNumber) updateFields.phoneNumber = phoneNumber;
-    if (description !== undefined) updateFields.description = description;
-    if (password) updateFields.password = password; // only update if non-empty
+    // Update fields if provided
+    if (username) user.username = username;
+    if (userRole) user.userRole = userRole;
+    if (DOB) user.DOB = DOB;
+    if (phoneNumber) user.phoneNumber = phoneNumber;
+    if (description !== undefined) user.description = description;
+    if (password) user.password = password; // will trigger pre-save hashing
 
-    const updatedUser = await User.findByIdAndUpdate(id, updateFields, {
-      new: true,
-      runValidators: true, // ensures schema validations are applied
+    // Save the updated user (triggers validations and password hashing)
+    await user.save();
+
+    res.status(200).json({
+      message: "User updated successfully",
+      user: {
+        userID: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.userRole,
+        DOB: user.DOB,
+        phoneNumber: user.phoneNumber,
+        description: user.description,
+      },
     });
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({ message: "User updated", user: updatedUser });
   } catch (error) {
     console.error("Update user error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 // DELETE

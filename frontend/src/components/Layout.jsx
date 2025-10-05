@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Sidebar from "./Sidebar.jsx";
 import Topbar from "./Topbar.jsx";
 
@@ -8,10 +9,8 @@ export default function Layout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const userInfo = localStorage.getItem("userInfo")
-    ? JSON.parse(localStorage.getItem("userInfo"))
-    : null;
-
+  // Get user info from Redux
+  const { userInfo } = useSelector((state) => state.auth);
   const role = userInfo?.user?.role?.toLowerCase() || "public";
   const showSidebar = role === "admin" || role === "manager";
 
@@ -31,7 +30,7 @@ export default function Layout({ children }) {
       setIsSidebarOpen(true);
     } else {
       setIsSidebarOpen(false);
-      setIsSidebarCollapsed(false); // collapsed by default on small screens
+      setIsSidebarCollapsed(false);
     }
   }, [isDesktop, showSidebar]);
 
@@ -40,7 +39,6 @@ export default function Layout({ children }) {
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Topbar
-        role={role}
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         sidebarWidth={showSidebar ? (isDesktop ? sidebarWidth : 0) : 0}
       />
