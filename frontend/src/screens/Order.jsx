@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useGetUserByIdQuery } from "../slices/usersApiSlice";
-import { useGetReceiptByIdQuery } from "../slices/saleApiSlice";
 import DownloadReceiptButton from "../components/DownloadReceiptButton";
-
 import { toast } from "react-toastify";
 
 const Order = () => {
-  // States
   const [sales, setSales] = useState([]);
-  const [addresses, setAddresses] = useState({}); // store addresses by addressID
+  const [addresses, setAddresses] = useState({});
   const [expandedSaleID, setExpandedSaleID] = useState(null);
 
-  // Get user role from localStorage
   const userInfo = localStorage.getItem("userInfo")
     ? JSON.parse(localStorage.getItem("userInfo"))
     : null;
@@ -19,29 +15,38 @@ const Order = () => {
   const role = userInfo?.user?.role?.toLowerCase() || "customer";
   const userId = userInfo?.user?.userID;
 
-  // Fetch customer info if role is customer
+  console.log(userId);
+
+  // Fetch customer info if logged in user is customer
   const { data: userData } = useGetUserByIdQuery(
     role === "customer" ? userId : null,
     { skip: role !== "customer" }
   );
+  console.log(userData);
 
   const customerId = role === "customer" ? userData?.customerId : null;
+  console.log(userData);
 
-  // Fetch sales
   useEffect(() => {
     const fetchSales = async () => {
       try {
         let url = "http://localhost:3000/api/sales";
+
         if (role === "customer" && customerId) {
-          url = `http://localhost:3000/api/sales/${customerId}`;
-        }
+          url = `http://localhost:3000/api/sales/customer/${parseInt(
+            customerId,
+            10
+          )}`;
+        } else if (role === "cashier") {
+          url = `http://localhost:3000/api/sales/status/pending`;
+        } // manager/admin: fetch all orders (default url)
 
         const res = await fetch(url);
         const data = await res.json();
         setSales(data);
 
-        // Pre-fetch all addresses
-        const addressIDs = [...new Set(data.map((sale) => sale.addressID))]; // unique addressIDs
+        // Pre-fetch addresses
+        const addressIDs = [...new Set(data.map((sale) => sale.addressID))];
         const addressResponses = await Promise.all(
           addressIDs.map((id) =>
             fetch(`http://localhost:3000/api/addresses/${id}`).then((res) =>
@@ -50,12 +55,9 @@ const Order = () => {
           )
         );
 
-        // Build a dictionary: addressID => address object
         const addressMap = {};
         addressResponses.forEach((resp) => {
-          if (resp.address) {
-            addressMap[resp.address.addressID] = resp.address;
-          }
+          if (resp.address) addressMap[resp.address.addressID] = resp.address;
         });
         setAddresses(addressMap);
       } catch (err) {
@@ -64,6 +66,7 @@ const Order = () => {
       }
     };
 
+    if (role === "customer" && !customerId) return; // wait until customerID is loaded
     fetchSales();
   }, [role, customerId]);
 
@@ -137,6 +140,12 @@ const Order = () => {
     }
   };
 
+  const canEditOrderStatus =
+    role === "manager" || role === "admin" || role === "cashier";
+  const canEditPaymentStatus = role === "manager" || role === "admin";
+  const canEditDeliveryDate =
+    role === "manager" || role === "admin" || role === "cashier";
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Orders</h1>
@@ -144,7 +153,7 @@ const Order = () => {
       {sales.length === 0 && <p>No sales found.</p>}
 
       {sales.map((sale) => {
-        const address = addresses[sale.addressID]; // fetch from preloaded addresses
+        const address = addresses[sale.addressID];
 
         return (
           <div
@@ -159,31 +168,37 @@ const Order = () => {
                 <p>
                   <strong>Customer ID:</strong> {sale.customerID}
                 </p>
+
                 <p>
                   <strong>Order Status:</strong>{" "}
-                  {role === "manager" || role === "admin" ? (
-                    <select
-                      value={sale.orderStatus}
-                      onChange={(e) =>
-                        handleStatusChange(
-                          sale.saleID,
-                          "orderStatus",
-                          e.target.value
-                        )
-                      }
-                      className="border rounded p-1"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
+                  {canEditOrderStatus ? (
+                    role === "cashier" && sale.orderStatus !== "pending" ? (
+                      sale.orderStatus
+                    ) : (
+                      <select
+                        value={sale.orderStatus}
+                        onChange={(e) =>
+                          handleStatusChange(
+                            sale.saleID,
+                            "orderStatus",
+                            e.target.value
+                          )
+                        }
+                        className="border rounded p-1"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    )
                   ) : (
                     sale.orderStatus
                   )}
                 </p>
+
                 <p>
                   <strong>Payment Status:</strong>{" "}
-                  {role === "manager" || role === "admin" ? (
+                  {canEditPaymentStatus ? (
                     <select
                       value={sale.paymentStatus}
                       onChange={(e) =>
@@ -203,28 +218,38 @@ const Order = () => {
                     sale.paymentStatus
                   )}
                 </p>
+
                 <p className="flex items-center gap-2">
                   <strong>Delivery Date:</strong>
-                  {role === "manager" || role === "admin" ? (
-                    <input
-                      type="date"
-                      value={
-                        sale.deliveryDate
-                          ? formatDateForInput(sale.deliveryDate)
-                          : ""
-                      }
-                      min={new Date().toISOString().split("T")[0]}
-                      onChange={(e) =>
-                        handleDeliveryDateChange(sale.saleID, e.target.value)
-                      }
-                      className="border rounded p-1"
-                    />
-                  ) : null}
+                  {canEditDeliveryDate ? (
+                    role === "cashier" && sale.orderStatus !== "pending" ? (
+                      formatDateForDisplay(sale.deliveryDate)
+                    ) : (
+                      <input
+                        type="date"
+                        value={
+                          sale.deliveryDate
+                            ? formatDateForInput(sale.deliveryDate)
+                            : ""
+                        }
+                        min={new Date().toISOString().split("T")[0]}
+                        onChange={(e) =>
+                          handleDeliveryDateChange(sale.saleID, e.target.value)
+                        }
+                        className="border rounded p-1"
+                      />
+                    )
+                  ) : (
+                    formatDateForDisplay(sale.deliveryDate)
+                  )}
                 </p>
-                <p className="text-gray-700 text-sm ml-[105px]">
-                  Current Delivery Date:{" "}
-                  {formatDateForDisplay(sale.deliveryDate)}
-                </p>
+
+                {role !== "customer" && (
+                  <p className="text-gray-700 text-sm ml-[105px]">
+                    Current Delivery Date:{" "}
+                    {formatDateForDisplay(sale.deliveryDate)}
+                  </p>
+                )}
               </div>
 
               <button
@@ -265,7 +290,6 @@ const Order = () => {
                 </p>
                 <DownloadReceiptButton saleID={parseInt(sale.saleID, 10)} />
 
-                {/* Display Address */}
                 {address && (
                   <div className="mt-2 border-t pt-2">
                     <p>

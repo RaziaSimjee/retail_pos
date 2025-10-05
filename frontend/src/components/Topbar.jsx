@@ -11,7 +11,6 @@ export default function Topbar({ toggleSidebar, sidebarWidth }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
-
   const [loyaltyOpen, setLoyaltyOpen] = useState(false);
 
   const userInfo = localStorage.getItem("userInfo")
@@ -20,17 +19,6 @@ export default function Topbar({ toggleSidebar, sidebarWidth }) {
   const role = userInfo?.user?.role?.toLowerCase() || "public";
 
   const [logout, { isLoading }] = useLogoutMutation();
-
-  const links = [
-    { label: "Orders", to: "/orders" },
-    { label: "Profile", to: "/profile" },
-  ];
-
-  const loyaltySubLinks = [
-    { label: "Wallets", to: "/wallets" },
-    { label: "Rewards", to: "/rewards" },
-    { label: "Spendings", to: "/spendings" },
-  ];
 
   const marginLeft = role === "admin" || role === "manager" ? sidebarWidth : 0;
   const canToggleSidebar = role === "admin" || role === "manager";
@@ -60,9 +48,147 @@ export default function Topbar({ toggleSidebar, sidebarWidth }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Role-based links
+  const renderLinks = () => {
+    switch (role) {
+      case "admin":
+      case "manager":
+        return (
+          <>
+            <button
+              onClick={() => navigate("/profile")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Profile
+            </button>
+            <button
+              onClick={handleLogout}
+              disabled={isLoading}
+              className={`px-3 py-2 rounded text-gray-800 hover:bg-gray-100 ${
+                isLoading ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
+              {isLoading ? "Logging out..." : "Logout"}
+            </button>
+          </>
+        );
+      case "cashier":
+        return (
+          <>
+            <button
+              onClick={() => navigate("/orders")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Orders
+            </button>
+            <button
+              onClick={() => navigate("/profile")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Profile
+            </button>
+            <button
+              onClick={handleLogout}
+              disabled={isLoading}
+              className={`px-3 py-2 rounded text-gray-800 hover:bg-gray-100 ${
+                isLoading ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
+              {isLoading ? "Logging out..." : "Logout"}
+            </button>
+          </>
+        );
+      case "customer":
+        return (
+          <>
+            <button
+              onClick={() => navigate("/orders")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Orders
+            </button>
+            <button
+              onClick={() => navigate("/profile")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Profile
+            </button>
+
+            {/* Loyalty Program Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setLoyaltyOpen(!loyaltyOpen)}
+                className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800 flex items-center gap-1"
+              >
+                Loyalty Program {loyaltyOpen ? "▾" : "▸"}
+              </button>
+              {loyaltyOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50">
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => {
+                      navigate("/wallets");
+                      setLoyaltyOpen(false);
+                    }}
+                  >
+                    Wallets
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => {
+                      navigate("/rewards");
+                      setLoyaltyOpen(false);
+                    }}
+                  >
+                    Rewards
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => {
+                      navigate("/spendings");
+                      setLoyaltyOpen(false);
+                    }}
+                  >
+                    Spendings
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={handleLogout}
+              disabled={isLoading}
+              className={`px-3 py-2 rounded text-gray-800 hover:bg-gray-100 ${
+                isLoading ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
+              {isLoading ? "Logging out..." : "Logout"}
+            </button>
+          </>
+        );
+      default:
+        // public
+        return (
+          <>
+            <button
+              onClick={() => navigate("/login")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Login
+            </button>
+            <button
+              onClick={() => navigate("/register")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Register
+            </button>
+          </>
+        );
+    }
+  };
+
   return (
     <header className="bg-white shadow flex items-center justify-between px-4 md:px-6 py-4 z-50">
-      {/* Left side */}
       <div className="flex items-center gap-3" style={{ marginLeft }}>
         {canToggleSidebar && (
           <IconButton
@@ -80,77 +206,7 @@ export default function Topbar({ toggleSidebar, sidebarWidth }) {
         </Typography>
       </div>
 
-      {/* Right side links */}
-      <div className="flex items-center gap-3 relative">
-        {links.map((link) => (
-          <button
-            key={link.label}
-            onClick={() => navigate(link.to)}
-            className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
-          >
-            {link.label}
-          </button>
-        ))}
-
-        {/* Loyalty Program dropdown */}
-        {role === "customer" && (
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setLoyaltyOpen(!loyaltyOpen)}
-              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800 flex items-center gap-1"
-            >
-              Loyalty Program {loyaltyOpen ? "▾" : "▸"}
-            </button>
-            {loyaltyOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50">
-                {loyaltySubLinks.map((sub) => (
-                  <button
-                    key={sub.label}
-                    onClick={() => {
-                      navigate(sub.to);
-                      setLoyaltyOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    {sub.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Logout */}
-        {role !== "public" && (
-          <button
-            onClick={handleLogout}
-            disabled={isLoading}
-            className={`px-3 py-2 rounded text-gray-800 hover:bg-gray-100 ${
-              isLoading ? "opacity-50 pointer-events-none" : ""
-            }`}
-          >
-            {isLoading ? "Logging out..." : "Logout"}
-          </button>
-        )}
-
-        {/* Login/Register for public */}
-        {role === "public" && (
-          <>
-            <button
-              onClick={() => navigate("/login")}
-              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => navigate("/register")}
-              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
-            >
-              Register
-            </button>
-          </>
-        )}
-      </div>
+      <div className="flex items-center gap-3">{renderLinks()}</div>
     </header>
   );
 }

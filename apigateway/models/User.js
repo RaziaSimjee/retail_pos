@@ -21,7 +21,7 @@ const UserSchema = new mongoose.Schema(
       enum: ["customer", "admin", "manager", "cashier"],
       default: "customer",
     },
-    customerID: {
+    customerId: {
       type: Number,
     },
     employeeID: {

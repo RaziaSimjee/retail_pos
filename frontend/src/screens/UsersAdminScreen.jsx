@@ -26,8 +26,9 @@ export default function UsersAdminScreen() {
   const handleAddSubmit = async (formData) => {
     setLoadingAction(true);
     try {
-      await registerUser(formData).unwrap();
+      const res = await registerUser(formData).unwrap();
       toast.success("User registered successfully");
+      console.log(res)
       setShowAddModal(false);
       refetch();
     } catch (err) {

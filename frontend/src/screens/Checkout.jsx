@@ -24,6 +24,7 @@ const Checkout = () => {
   const { userInfo } = useSelector((state) => state.auth);
 
   const isCustomer = userInfo?.user?.role === "customer";
+  console.log(`is cusotmer: ${isCustomer}`);
 
   // State
   const [customerId, setCustomerId] = useState(null);
@@ -55,7 +56,14 @@ const Checkout = () => {
     { skip: !isCustomer }
   );
 
+  console.log(`user id of customer: ${userInfo?.user?.userID}`);
+
+  console.log("userData:", userData);
+  console.log("customerID from userData:", userData?.customerId);
+
   const resolvedCustomerId = isCustomer ? userData?.customerId : customerId;
+
+  console.log(resolvedCustomerId);
 
   // Fetch loyalty info
   const { data: customerData, isLoading: customerLoading } =
@@ -101,7 +109,10 @@ const Checkout = () => {
   useEffect(() => {
     setAvailablePoints(customer?.loyaltyWallet?.points || 0);
     setPointsSpent(0);
-  }, [customer]);
+    if (isCustomer && userData?.customerID) {
+      setCustomerId(userData.customerID); // auto-select customerId
+    }
+  }, [isCustomer, userData, customer]);
 
   // Backend product list
   const productList = cartItems.map((item) => ({
@@ -318,7 +329,9 @@ const Checkout = () => {
         </div>
       )}
       {/* Order options for cashier */}
-      {!isCustomer && userInfo.user.role === "cashier" && (
+      {/* Order options section */}
+      {!isCustomer ? (
+        // 🧾 Cashier view — editable
         <div className="mb-6 p-4 border rounded bg-gray-50 space-y-3">
           <h3 className="font-semibold">Order Options (Cashier)</h3>
 
@@ -335,6 +348,7 @@ const Checkout = () => {
             </select>
           </div>
 
+          {/* Estimated Delivery Date */}
           {deliveryOption === "delivery" && (
             <p className="mt-2 text-gray-700">
               Estimated Delivery Date:{" "}
@@ -342,7 +356,7 @@ const Checkout = () => {
             </p>
           )}
 
-          {/* here */}
+          {/* Address Selection (if delivery) */}
           {deliveryOption === "delivery" && (
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Select Delivery Address</h3>
@@ -370,7 +384,6 @@ const Checkout = () => {
                           : "border-gray-300"
                       }`}
                     >
-                      {/* Accordion Header */}
                       <div
                         className="flex justify-between items-center cursor-pointer"
                         onClick={() =>
@@ -404,7 +417,6 @@ const Checkout = () => {
                         </span>
                       </div>
 
-                      {/* Accordion Content */}
                       {expandedAddress === addr.addressID && (
                         <div className="mt-2 text-sm text-gray-700 space-y-1">
                           <p>
@@ -424,7 +436,7 @@ const Checkout = () => {
             </div>
           )}
 
-          {/* Only show order/payment status if delivery */}
+          {/* Editable order/payment statuses */}
           {deliveryOption === "delivery" && (
             <div className="flex gap-4 mt-2">
               <div>
@@ -454,7 +466,124 @@ const Checkout = () => {
             </div>
           )}
         </div>
+      ) : (
+        // 🚫 Customer view — locked
+        <div className="mb-6 p-4 border rounded bg-gray-50 space-y-3">
+          <h3 className="font-semibold">Order Options</h3>
+
+          {/* Locked Delivery Option */}
+          <div>
+            <label className="block mb-1 font-medium">Delivery Option</label>
+            <select
+              value="delivery"
+              disabled
+              className="border rounded p-2 w-40 bg-gray-100 text-gray-600 cursor-not-allowed"
+            >
+              <option value="delivery">Delivery (locked)</option>
+            </select>
+            <p className="text-sm text-gray-500 mt-1">
+              Customers can only select delivery.
+            </p>
+          </div>
+
+          {/* Estimated Delivery Date */}
+          <p className="mt-2 text-gray-700">
+            Estimated Delivery Date:{" "}
+            {new Date(Date.now() + 2 * 864e5).toLocaleDateString()}
+          </p>
+
+          {/* Delivery address selection */}
+          {addresses.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">Select Delivery Address</h3>
+              <div
+                className={`space-y-3 border p-3 rounded ${
+                  addresses.length > 1 ? "max-h-64 overflow-y-auto" : ""
+                }`}
+              >
+                {addresses.map((addr) => (
+                  <div
+                    key={addr.addressID}
+                    className={`border rounded-lg p-3 ${
+                      selectedAddressId === addr.addressID
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    <div
+                      className="flex justify-between items-center cursor-pointer"
+                      onClick={() =>
+                        setExpandedAddress(
+                          expandedAddress === addr.addressID
+                            ? null
+                            : addr.addressID
+                        )
+                      }
+                    >
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="selectedAddress"
+                          value={addr.addressID}
+                          checked={selectedAddressId === addr.addressID}
+                          onChange={() => setSelectedAddressId(addr.addressID)}
+                        />
+                        <span className="font-medium">{addr.label}</span>
+                      </label>
+                      <span
+                        className={`transition-transform ${
+                          expandedAddress === addr.addressID ? "rotate-180" : ""
+                        }`}
+                      >
+                        ⌄
+                      </span>
+                    </div>
+
+                    {expandedAddress === addr.addressID && (
+                      <div className="mt-2 text-sm text-gray-700 space-y-1">
+                        <p>
+                          {addr.buildingNo}, {addr.laneNo}, {addr.town}
+                        </p>
+                        <p>
+                          {addr.state}, {addr.country}, {addr.zipcode}
+                        </p>
+                        {addr.floor && <p>Floor: {addr.floor}</p>}
+                        {addr.roomNo && <p>Room: {addr.roomNo}</p>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Locked statuses */}
+          <div className="flex gap-4 mt-2 opacity-60">
+            <div>
+              <label className="block mb-1 font-medium">Order Status</label>
+              <select
+                value="pending"
+                disabled
+                className="border rounded p-2 w-40 bg-gray-100 text-gray-600 cursor-not-allowed"
+              >
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block mb-1 font-medium">Payment Status</label>
+              <select
+                value="pending"
+                disabled
+                className="border rounded p-2 w-40 bg-gray-100 text-gray-600 cursor-not-allowed"
+              >
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+          </div>
+        </div>
       )}
+
       {/* Tax & Discount for cashier */}
       {!isCustomer && (
         <div className="flex gap-4 mb-6">
