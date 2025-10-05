@@ -11,7 +11,7 @@ import { Provider } from "react-redux";
 import "./assets/styles/index.css";
 import App from "./App.jsx";
 // Admin Screens
-import HomeScreen from "./screens/HomeScreen.jsx";
+import Dashboard from "./screens/Dashboard.jsx";
 import ProductsAdminScreen from "./screens/ProductsAdminScreen.jsx";
 import ProductVariantAdminScreen from "./screens/ProductVaraintAdminScreen.jsx";
 import Catalog from "./screens/Catalog.jsx";
@@ -58,6 +58,7 @@ const router = createBrowserRouter(
         <Route path="register" element={<RegisterForm />} />
         <Route path="forgotPassword" element={<ForgotPasswordScreen />} />
         <Route path="catalog" element={<Catalog />} />
+        <Route path="/dashboard" element={<Dashboard />} />
 
         <Route path="users/:role" element={<UsersAdminScreen />} />
         <Route path="/addresses/:id" element={<AddressesScreen />} />

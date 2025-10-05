@@ -1,7 +1,8 @@
-// src/pages/Rewards.jsx
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { FaEdit, FaTrash, FaPlus, FaFilter } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import { skipToken } from "@reduxjs/toolkit/query";
 import {
   useGetAllLoyaltyWalletsQuery,
   useGetLoyaltyRewardsByWalletIdQuery,
@@ -10,24 +11,43 @@ import {
   useDeleteLoyaltyRewardMutation,
   useGetLoyaltyRewardsCountByWalletIdQuery,
   useGetTotalPointsRewardedByWalletIdQuery,
+  useGetCustomerLoyaltyWalletQuery,
 } from "../slices/loyaltyProgramApiSlice";
+import { useGetUserByIdQuery } from "../slices/usersApiSlice";
 
 export default function Rewards() {
-  // Fetch wallets
-  const { data: wallets, isLoading: walletsLoading } = useGetAllLoyaltyWalletsQuery({ skip: 0, take: 100 });
-  const [selectedWallet, setSelectedWallet] = useState("");
-  const [filter, setFilter] = useState(""); // <-- Filter state
+  const { userInfo } = useSelector((state) => state.auth);
+  const role = userInfo?.user?.role?.toLowerCase();
+  const isCustomer = role === "customer";
+  const userId = userInfo?.user?.userID;
 
-  // Fetch rewards for selected wallet
-  const { data: rewards = [], isLoading: rewardsLoading, refetch } = useGetLoyaltyRewardsByWalletIdQuery(
-    { walletId: selectedWallet, skip: 0, take: 100 },
-    { skip: !selectedWallet }
+  // --- Step 1: fetch user for customerId ---
+  const { data: userData, isLoading: userLoading } = useGetUserByIdQuery(
+    userId ?? skipToken,
+    { skip: !isCustomer || !userId }
   );
 
-  // Fetch totals
-  const { data: totalRewards = 0 } = useGetLoyaltyRewardsCountByWalletIdQuery(selectedWallet, { skip: !selectedWallet });
-  const { data: totalPoints } = useGetTotalPointsRewardedByWalletIdQuery(selectedWallet, { skip: !selectedWallet });
+  // --- Step 2: fetch customer's single wallet ---
+  const { data: customerWalletData, isLoading: customerWalletLoading } =
+    useGetCustomerLoyaltyWalletQuery(userData?.customerId ?? skipToken, {
+      skip: !userData?.customerId || !isCustomer,
+    });
 
+  // --- Admin: fetch all wallets ---
+  const { data: wallets, isLoading: walletsLoading } =
+    useGetAllLoyaltyWalletsQuery({ skip: 0, take: 100 }, { skip: isCustomer });
+
+  // --- Selected wallet ---
+  const [selectedWallet, setSelectedWallet] = useState(null);
+
+  // Preselect for customer
+  useEffect(() => {
+    if (customerWalletData?.loyaltyWalletId) {
+      setSelectedWallet(customerWalletData.loyaltyWalletId);
+    }
+  }, [customerWalletData]);
+
+  const [filter, setFilter] = useState("");
   const [editingReward, setEditingReward] = useState(null);
   const [formData, setFormData] = useState({
     loyaltyWalletId: "",
@@ -35,16 +55,37 @@ export default function Rewards() {
     rewardedDate: new Date().toISOString().split("T")[0],
   });
 
-  const [createReward] = useCreateLoyaltyRewardMutation();
-  const [updateReward] = useUpdateLoyaltyRewardMutation();
+  const [createReward, { isLoading: isCreating }] = useCreateLoyaltyRewardMutation();
+  const [updateReward, { isLoading: isUpdating }] = useUpdateLoyaltyRewardMutation();
   const [deleteReward] = useDeleteLoyaltyRewardMutation();
 
-  // Update wallet id in form when selection changes
+  // Fetch rewards for selected wallet
+  const {
+    data: rewards = [],
+    isLoading: rewardsLoading,
+    refetch,
+  } = useGetLoyaltyRewardsByWalletIdQuery(
+    selectedWallet ? { walletId: selectedWallet, skip: 0, take: 100 } : skipToken
+  );
+
+  // Fetch totals
+  const { data: totalRewards = 0 } = useGetLoyaltyRewardsCountByWalletIdQuery(
+    selectedWallet ?? skipToken
+  );
+  const { data: totalPoints } = useGetTotalPointsRewardedByWalletIdQuery(
+    selectedWallet ?? skipToken
+  );
+
+  // --- Update formData when wallet changes ---
   useEffect(() => {
-    setFormData((prev) => ({ ...prev, loyaltyWalletId: selectedWallet }));
+    if (selectedWallet) {
+      setFormData((prev) => ({ ...prev, loyaltyWalletId: selectedWallet }));
+      setEditingReward(null);
+    }
   }, [selectedWallet]);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const validateForm = () => {
     if (!formData.loyaltyWalletId) {
@@ -116,7 +157,6 @@ export default function Rewards() {
     }
   };
 
-  // Filter rewards based on filter text
   const filteredRewards = rewards.filter((r) => {
     const search = filter.toLowerCase();
     return (
@@ -127,40 +167,75 @@ export default function Rewards() {
     );
   });
 
-  if (walletsLoading) return <p className="text-center mt-4 text-gray-500">Loading wallets...</p>;
-  if (selectedWallet && rewardsLoading) return <p className="text-center mt-4 text-gray-500">Loading rewards...</p>;
+  if (
+    walletsLoading ||
+    userLoading ||
+    customerWalletLoading ||
+    (selectedWallet && rewardsLoading)
+  ) {
+    return <p className="text-center mt-4 text-gray-500">Loading...</p>;
+  }
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Loyalty Rewards</h2>
 
-      {/* Wallet selector and totals */}
+      {/* Wallet selector & totals */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:gap-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">Select Wallet</label>
-          <select
-            className="border rounded p-2 w-full md:w-64"
-            value={selectedWallet}
-            onChange={(e) => setSelectedWallet(e.target.value)}
-          >
-            <option value="">-- Select Wallet --</option>
-            {wallets?.map((w) => (
-              <option key={w.loyaltyWalletId} value={w.loyaltyWalletId}>
-                Wallet {w.loyaltyWalletId} - Customer {w.customerId}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {selectedWallet && (
-          <div className="flex gap-6 mt-2 md:mt-0">
-            <div>Total Rewards: <span className="font-semibold">{totalRewards || 0}</span></div>
-            <div>Total Points Earned: <span className="font-semibold">{totalPoints?.totalPointsEarned || 0}</span></div>
+        {isCustomer && selectedWallet && customerWalletData ? (
+          <div className="flex flex-col md:flex-row md:items-center md:gap-4 w-full md:w-auto">
+            <div>
+              <label className="block text-sm font-medium mb-2">Your Wallet</label>
+              <input
+                type="text"
+                value={`Wallet ${selectedWallet} - Points: ${customerWalletData.points}`}
+                readOnly
+                className="border border-gray-300 rounded p-2 w-full md:w-64 bg-white cursor-not-allowed"
+              />
+            </div>
+            <div className="mt-2 md:mt-0">
+              <label className="block text-sm font-medium mb-2">Total Rewards</label>
+              <input
+                type="text"
+                value={totalRewards || 0}
+                readOnly
+                className="border border-gray-300 rounded p-2 w-full md:w-40 bg-white cursor-not-allowed"
+              />
+            </div>
           </div>
-        )}
+        ) : !isCustomer ? (
+          <div className="flex flex-col md:flex-row md:items-center md:gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">Select Wallet</label>
+              <select
+                className="border border-gray-300 rounded p-2 w-full md:w-64 bg-white"
+                value={selectedWallet || ""}
+                onChange={(e) => setSelectedWallet(Number(e.target.value))}
+              >
+                <option value="">-- Select Wallet --</option>
+                {wallets?.map((w) => (
+                  <option key={w.loyaltyWalletId} value={w.loyaltyWalletId}>
+                    Wallet {w.loyaltyWalletId} - Customer {w.customerId}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selectedWallet && (
+              <div className="mt-2 md:mt-0">
+                <label className="block text-sm font-medium mb-2">Total Rewards</label>
+                <input
+                  type="text"
+                  value={totalRewards || 0}
+                  readOnly
+                  className="border border-gray-300 rounded p-2 w-full md:w-40 bg-white cursor-not-allowed"
+                />
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
-      {/* Filter Input */}
+      {/* Filter */}
       {selectedWallet && (
         <div className="mb-4 relative w-full md:w-1/3">
           <FaFilter
@@ -169,7 +244,7 @@ export default function Rewards() {
           />
           <input
             type="text"
-            placeholder="Filter by points rewarded, wallet id, date or description"
+            placeholder="Filter by points, wallet id, or date"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="border p-2 pl-10 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -177,66 +252,63 @@ export default function Rewards() {
         </div>
       )}
 
-      {/* Add/Edit Reward Form */}
-{/* Add/Edit Reward Form */}
-{selectedWallet && (
-  <form onSubmit={handleSubmit} className="mb-6 bg-gray-50 p-4 rounded-lg shadow">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-      {/* Show Reward ID when editing */}
-      {editingReward && (
-        <div className="col-span-full">
-          <p className="text-sm text-gray-600">
-            Editing Reward ID:{" "}
-            <span className="font-semibold">{editingReward.loyaltyPointsAwardId}</span>
-          </p>
-        </div>
+      {/* Add/Edit form */}
+      {selectedWallet && !isCustomer && (
+        <form onSubmit={handleSubmit} className="mb-6 bg-gray-50 p-4 rounded-lg shadow">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {editingReward && (
+              <div className="col-span-full">
+                <p className="text-sm text-gray-600">
+                  Editing Reward ID:{" "}
+                  <span className="font-semibold">{editingReward.loyaltyPointsAwardId}</span>
+                </p>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium mb-1">Points Rewarded</label>
+              <input
+                type="number"
+                name="loyaltyPointsRewarded"
+                value={formData.loyaltyPointsRewarded}
+                onChange={handleChange}
+                className="border rounded p-2 w-full"
+                placeholder="Points"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Rewarded Date</label>
+              <input
+                type="date"
+                name="rewardedDate"
+                value={formData.rewardedDate}
+                onChange={handleChange}
+                className="border rounded p-2 w-full"
+                required
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              type="submit"
+              disabled={isCreating || isUpdating}
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              <FaPlus />
+              {editingReward ? (isUpdating ? "Updating..." : "Update Reward") : isCreating ? "Adding..." : "Add Reward"}
+            </button>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       )}
-      
-      <div>
-        <label className="block text-sm font-medium mb-1">Points Rewarded</label>
-        <input
-          type="number"
-          name="loyaltyPointsRewarded"
-          value={formData.loyaltyPointsRewarded}
-          onChange={handleChange}
-          className="border rounded p-2 w-full"
-          placeholder="Points"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Rewarded Date</label>
-        <input
-          type="date"
-          name="rewardedDate"
-          value={formData.rewardedDate}
-          onChange={handleChange}
-          className="border rounded p-2 w-full"
-          required
-        />
-      </div>
-    </div>
 
-    <div className="flex gap-2 mt-4">
-      <button
-        type="submit"
-        className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        <FaPlus /> {editingReward ? "Update Reward" : "Add Reward"}
-      </button>
-      <button
-        type="button"
-        onClick={resetForm}
-        className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-      >
-        Cancel
-      </button>
-    </div>
-  </form>
-)}
-
-
-      {/* Rewards Table */}
+      {/* Rewards table */}
       {selectedWallet && filteredRewards.length > 0 ? (
         <div className="overflow-x-auto shadow rounded-lg">
           <table className="min-w-full border border-gray-200 text-left">
@@ -246,7 +318,7 @@ export default function Rewards() {
                 <th className="px-4 py-2">Wallet ID</th>
                 <th className="px-4 py-2">Points Rewarded</th>
                 <th className="px-4 py-2">Rewarded Date</th>
-                <th className="px-4 py-2 text-right">Actions</th>
+                {!isCustomer && <th className="px-4 py-2 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -255,25 +327,17 @@ export default function Rewards() {
                   <td className="px-4 py-2">{r.loyaltyPointsAwardId}</td>
                   <td className="px-4 py-2">{r.loyaltyWalletId}</td>
                   <td className="px-4 py-2">{r.loyaltyPointsRewarded}</td>
-                  <td className="px-4 py-2">
-                    {new Date(r.rewardedDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-2 text-right flex justify-end gap-2">
-                    <button
-                      onClick={() => handleEditClick(r)}
-                      className="text-blue-500 hover:text-blue-700"
-                      title="Edit"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(r.loyaltyPointsAwardId)}
-                      className="text-red-500 hover:text-red-700"
-                      title="Delete"
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
+                  <td className="px-4 py-2">{new Date(r.rewardedDate).toLocaleDateString()}</td>
+                  {!isCustomer && (
+                    <td className="px-4 py-2 text-right flex justify-end gap-2">
+                      <button onClick={() => handleEditClick(r)} className="text-blue-500 hover:text-blue-700" title="Edit">
+                        <FaEdit />
+                      </button>
+                      <button onClick={() => handleDeleteClick(r.loyaltyPointsAwardId)} className="text-red-500 hover:text-red-700" title="Delete">
+                        <FaTrash />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
