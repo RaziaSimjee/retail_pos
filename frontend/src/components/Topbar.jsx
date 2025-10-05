@@ -5,7 +5,6 @@ import { Bars3Icon } from "@heroicons/react/24/outline";
 import storeLogo from "../assets/images/ClothesLogo.png";
 
 export default function Topbar({ role, toggleSidebar, sidebarWidth }) {
-  // Dropdown items per role
   const menuItems = {
     public: [
       { label: "Login", to: "/login" },
@@ -30,6 +29,9 @@ export default function Topbar({ role, toggleSidebar, sidebarWidth }) {
   // Shift logo+heading for admin or manager
   const marginLeft = (role === "admin" || role === "manager") ? sidebarWidth : 0;
 
+  // Determine if sidebar toggle should be shown (only for admin/manager on small screens)
+  const canToggleSidebar = (role === "admin" || role === "manager");
+
   return (
     <header
       className="bg-white shadow flex items-center justify-between px-4 md:px-6 py-4 transition-all duration-300 z-50"
@@ -39,15 +41,17 @@ export default function Topbar({ role, toggleSidebar, sidebarWidth }) {
         className="flex items-center gap-3 transition-all duration-300"
         style={{ marginLeft }}
       >
-        {/* Mobile Hamburger */}
-        <IconButton
-          variant="text"
-          size="lg"
-          onClick={toggleSidebar}
-          className="md:hidden"
-        >
-          <Bars3Icon className="h-8 w-8 stroke-2" />
-        </IconButton>
+        {/* Mobile Hamburger: Only admin/manager */}
+        {canToggleSidebar && (
+          <IconButton
+            variant="text"
+            size="lg"
+            onClick={toggleSidebar}
+            className="md:hidden"
+          >
+            <Bars3Icon className="h-8 w-8 stroke-2" />
+          </IconButton>
+        )}
 
         <img src={storeLogo} alt="logo" className="h-8 w-8" />
         <Typography variant="h5" className="font-bold text-gray-800">

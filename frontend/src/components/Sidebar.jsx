@@ -1,24 +1,16 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { IconButton, List, ListItem, Typography, Tooltip } from "@material-tailwind/react";
 import {
-  IconButton,
-  List,
-  ListItem,
-  Typography,
-} from "@material-tailwind/react";
-import {
-  HomeIcon,
-  CubeTransparentIcon,
-  ClipboardDocumentListIcon,
-  UsersIcon,
-} from "@heroicons/react/24/solid";
-import {
-  ChevronRightIcon,
-  ChevronDownIcon,
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+  FaHome,
+  FaBoxes,
+  FaClipboardList,
+  FaUsers,
+  FaCoins,
+  FaTags,
+  FaMoneyBillWave,
+} from "react-icons/fa";
+import { AiOutlineDown, AiOutlineRight, AiOutlineArrowLeft, AiOutlineClose } from "react-icons/ai";
 import storeLogo from "../assets/images/ClothesLogo.png";
 
 export default function Sidebar({
@@ -31,14 +23,13 @@ export default function Sidebar({
 }) {
   const [openDropdown, setOpenDropdown] = useState(null);
   const location = useLocation();
-
   const useOverlay = isMobile || isTablet;
 
   const sidebarLinks = [
-    { to: "/", label: "Dashboard", icon: HomeIcon },
+    { to: "/", label: "Dashboard", icon: <FaHome /> },
     {
       label: "Inventory",
-      icon: CubeTransparentIcon,
+      icon: <FaBoxes />,
       subItems: [
         { to: "/brands", label: "Brands" },
         { to: "/categories", label: "Categories" },
@@ -50,13 +41,13 @@ export default function Sidebar({
         { to: "/suppliers", label: "Suppliers" },
       ],
     },
-    { to: "/catalog", label: "Catalog", icon: HomeIcon },
-    { to: "/payment", label: "Payment", icon: HomeIcon },
-    { to: "/taxrule", label: "Tax rule", icon: HomeIcon },
-    { to: "/orders", label: "Orders", icon: ClipboardDocumentListIcon },
+    { to: "/catalog", label: "Catalog", icon: <FaTags /> },
+    { to: "/payment", label: "Payment", icon: <FaMoneyBillWave /> },
+    { to: "/taxrule", label: "Tax rule", icon: <FaCoins /> },
+    { to: "/orders", label: "Orders", icon: <FaClipboardList /> },
     {
       label: "Loyalty Program",
-      icon: CubeTransparentIcon,
+      icon: <FaCoins />,
       subItems: [
         { to: "/wallets", label: "Wallets" },
         { to: "/rules", label: "Rules" },
@@ -66,7 +57,7 @@ export default function Sidebar({
     },
     {
       label: "Users",
-      icon: UsersIcon,
+      icon: <FaUsers />,
       subItems: [
         { to: "/users/cashier", label: "Cashiers" },
         { to: "/users/manager", label: "Managers" },
@@ -75,157 +66,157 @@ export default function Sidebar({
     },
   ];
 
-  const toggleDropdown = (label) =>
-    setOpenDropdown(openDropdown === label ? null : label);
+  const toggleDropdown = (label) => setOpenDropdown(openDropdown === label ? null : label);
   const isActive = (to) => location.pathname === to;
 
+  // Show text in expanded sidebar or overlay open
   const showText = (!isCollapsed && !useOverlay) || (useOverlay && isOpen);
 
-  if (useOverlay && !isOpen) return null; // overlay closed
+  const sidebarWidth = !useOverlay ? (isCollapsed ? 64 : 280) : 280;
+
+  if (useOverlay && !isOpen) return null;
 
   return (
     <>
       {/* Overlay */}
       {useOverlay && isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setIsOpen(false)} />
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform transition-all duration-300
-          ${
-            useOverlay
-              ? isOpen
-                ? "translate-x-0 w-72"
-                : "-translate-x-full"
-              : ""
-          }
-          ${!useOverlay ? (isCollapsed ? "w-16" : "w-72") : ""}`}
+        className="fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform transition-all duration-300 border-r border-gray-200 overflow-x-hidden"
+        style={{
+          width: sidebarWidth,
+          boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
+        }}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full pb-6 overflow-hidden">
           {/* Collapse button for desktop */}
           {!useOverlay && (
-            <div className="flex justify-end p-2">
+            <div className="flex justify-end p-2 flex-shrink-0">
               <IconButton
                 variant="text"
                 size="lg"
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="hover:bg-gray-200"
               >
-                {isCollapsed ? (
-                  <ArrowRightIcon className="h-5 w-5 stroke-2 text-gray-700" />
-                ) : (
-                  <ArrowLeftIcon className="h-5 w-5 stroke-2 text-gray-700" />
-                )}
+                {isCollapsed ? <AiOutlineRight size={20} /> : <AiOutlineArrowLeft size={20} />}
               </IconButton>
             </div>
           )}
 
           {/* Overlay close button */}
           {useOverlay && isOpen && (
-            <div className="flex justify-end p-4">
+            <div className="flex justify-end p-4 flex-shrink-0">
               <IconButton
                 variant="text"
                 size="lg"
                 onClick={() => setIsOpen(false)}
                 className="hover:bg-gray-200"
               >
-                <XMarkIcon className="h-6 w-6 stroke-2 text-gray-700" />
+                <AiOutlineClose size={24} />
               </IconButton>
             </div>
           )}
 
           {/* Logo */}
           <div
-            className={`flex items-center gap-3 px-4 mb-6 transition-all duration-300
-            ${!showText ? "justify-center" : "justify-start"} ${
-              useOverlay && "mt-4"
-            }`}
+            className={`flex items-center gap-3 px-3 mb-6 flex-shrink-0 transition-all duration-300
+              ${isCollapsed ? "justify-center" : "justify-start"} ${useOverlay && "mt-4"}`}
+            style={{ height: 26 }}
           >
             <img src={storeLogo} alt="store logo" className="h-8 w-8" />
-            {showText && (
-              <Typography className="font-bold text-gray-800 text-lg">
-                EFS Store
-              </Typography>
+            {!isCollapsed && (
+              <Typography className="font-bold text-gray-800 text-lg">EFS Store</Typography>
             )}
           </div>
 
-          {/* Menu */}
-          <List className="flex-1 px-1 space-y-1">
-            {sidebarLinks.map((link) => (
-              <div key={link.label} className="relative group">
-                {link.subItems ? (
-                  <>
-                    <ListItem
-                      className={`rounded-lg flex items-center cursor-pointer
-                      ${
-                        !showText
-                          ? "px-0 py-2 w-16 justify-center"
-                          : "px-3 py-2"
-                      }
-                      hover:bg-gray-300 transition-all`}
-                      onClick={() => toggleDropdown(link.label)}
-                    >
-                      <link.icon className="h-5 w-5 text-blue-600" />
-                      {showText && (
-                        <span className="ml-2 flex-1">{link.label}</span>
-                      )}
-                      {showText &&
-                        (openDropdown === link.label ? (
-                          <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-                        ) : (
-                          <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-                        ))}
-                    </ListItem>
-
-                    {openDropdown === link.label && showText && (
-                      <List className="space-y-1 pl-8">
-                        {link.subItems.map((sub) => (
-                          <Link
-                            key={sub.label}
-                            to={sub.to}
-                            onClick={() => useOverlay && setIsOpen(false)}
-                            className={`block rounded-lg px-3 py-1 text-sm transition-colors ${
-                              isActive(sub.to)
-                                ? "bg-blue-100 text-blue-700"
-                                : "text-gray-600 hover:bg-gray-300"
-                            }`}
+          {/* Scrollable menu */}
+          <div
+            className={`flex-1 px-1 overflow-y-auto overflow-x-hidden ${isCollapsed ? "overflow-y-hidden" : ""}`}
+          >
+            <List className="space-y-1">
+              {sidebarLinks.map((link) => (
+                <div key={link.label} className="relative group">
+                  {/* Submenu */}
+                  {link.subItems ? (
+                    <>
+                      {!showText ? (
+                        <Tooltip content={link.label} placement="right" offset={8}>
+                          <ListItem
+                            className="rounded-lg flex items-center cursor-pointer px-1 py-2 w-16 justify-start hover:bg-gray-300 transition-all"
+                            onClick={() => toggleDropdown(link.label)}
                           >
-                            {sub.label}
-                          </Link>
-                        ))}
-                      </List>
-                    )}
-                  </>
-                ) : (
-                  <Link
-                    to={link.to}
-                    onClick={() => useOverlay && setIsOpen(false)}
-                    className={`rounded-lg flex items-center cursor-pointer
-                    ${!showText ? "px-0 py-2 w-16 justify-center" : "px-3 py-2"}
-                    transition-all ${
-                      isActive(link.to)
-                        ? "bg-blue-100 text-blue-700"
-                        : "hover:bg-gray-300"
-                    }`}
-                  >
-                    <link.icon className="h-5 w-5 text-blue-600" />
-                    {showText && (
-                      <span className="ml-2 flex-1">{link.label}</span>
-                    )}
-                  </Link>
-                )}
+                            <span className="text-blue-600 text-lg">{link.icon}</span>
+                          </ListItem>
+                        </Tooltip>
+                      ) : (
+                        <ListItem
+                          className="rounded-lg flex items-center cursor-pointer px-3 py-2 hover:bg-gray-300 transition-all"
+                          onClick={() => toggleDropdown(link.label)}
+                        >
+                          <span className="text-blue-600 text-lg">{link.icon}</span>
+                          <span className="ml-2 flex-1">{link.label}</span>
+                          {openDropdown === link.label ? (
+                            <AiOutlineDown size={16} />
+                          ) : (
+                            <AiOutlineRight size={16} />
+                          )}
+                        </ListItem>
+                      )}
 
-                {!showText && (
-                  <span className="absolute top-1/2 left-16 -translate-y-1/2 px-2 py-1 bg-gray-700 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                    {link.label}
-                  </span>
-                )}
-              </div>
-            ))}
-          </List>
+                      {openDropdown === link.label && showText && (
+                        <List className="space-y-1 pl-6">
+                          {link.subItems.map((sub) => (
+                            <Link
+                              key={sub.label}
+                              to={sub.to}
+                              onClick={() => useOverlay && setIsOpen(false)}
+                              className={`block rounded-lg px-3 py-1 text-sm transition-colors ${
+                                isActive(sub.to)
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "text-gray-600 hover:bg-gray-300"
+                              }`}
+                            >
+                              {sub.label}
+                            </Link>
+                          ))}
+                        </List>
+                      )}
+                    </>
+                  ) : (
+                    // Single link
+                    <>
+                      {!showText ? (
+                        <Tooltip content={link.label} placement="right" offset={8}>
+                          <Link
+                            to={link.to}
+                            onClick={() => useOverlay && setIsOpen(false)}
+                            className="rounded-lg flex items-center cursor-pointer px-1 py-2 w-16 justify-start hover:bg-gray-300 transition-all"
+                          >
+                            <span className="text-blue-600 text-lg">{link.icon}</span>
+                          </Link>
+                        </Tooltip>
+                      ) : (
+                        <Link
+                          to={link.to}
+                          onClick={() => useOverlay && setIsOpen(false)}
+                          className={`rounded-lg flex items-center cursor-pointer px-2 py-2 transition-all ${
+                            isActive(link.to)
+                              ? "bg-blue-100 text-blue-700"
+                              : "hover:bg-gray-300"
+                          }`}
+                        >
+                          <span className="text-blue-600 text-lg">{link.icon}</span>
+                          <span className="ml-2 flex-1">{link.label}</span>
+                        </Link>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </List>
+          </div>
         </div>
       </aside>
     </>

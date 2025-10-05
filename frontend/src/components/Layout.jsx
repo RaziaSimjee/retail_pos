@@ -13,9 +13,7 @@ export default function Layout({ children }) {
     : null;
 
   const role = userInfo?.user?.role?.toLowerCase() || "public";
-
-  const allowedRoles = ["admin", "manager"];
-  const showSidebar = allowedRoles.includes(role);
+  const showSidebar = role === "admin" || role === "manager";
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -24,13 +22,16 @@ export default function Layout({ children }) {
   }, []);
 
   const isDesktop = windowWidth >= 1024;
+  const isMobile = windowWidth < 1024;
 
+  // Automatically collapse or hide sidebar on smaller screens
   useEffect(() => {
     if (isDesktop && showSidebar) {
       setIsSidebarCollapsed(false);
       setIsSidebarOpen(true);
     } else {
       setIsSidebarOpen(false);
+      setIsSidebarCollapsed(false); // collapsed by default on small screens
     }
   }, [isDesktop, showSidebar]);
 
@@ -41,9 +42,7 @@ export default function Layout({ children }) {
       <Topbar
         role={role}
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        sidebarWidth={
-          isDesktop && showSidebar ? (isSidebarCollapsed ? 64 : 280) : 0
-        }
+        sidebarWidth={showSidebar ? (isDesktop ? sidebarWidth : 0) : 0}
       />
 
       <div className="flex flex-1 relative">
@@ -53,6 +52,7 @@ export default function Layout({ children }) {
             setIsCollapsed={setIsSidebarCollapsed}
             isOpen={isSidebarOpen}
             setIsOpen={setIsSidebarOpen}
+            isMobile={isMobile}
           />
         )}
 
