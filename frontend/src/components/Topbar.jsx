@@ -1,12 +1,7 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import {
-  Menu,
-  MenuItem,
-  IconButton,
-  Typography,
-} from "@material-tailwind/react";
+import { IconButton, Typography } from "@material-tailwind/react";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import storeLogo from "../assets/images/ClothesLogo.png";
 import { useLogoutMutation } from "../slices/usersApiSlice.js";
@@ -15,6 +10,9 @@ import { logout as logoutAction } from "../slices/authSlice";
 export default function Topbar({ toggleSidebar, sidebarWidth }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+  const [loyaltyOpen, setLoyaltyOpen] = useState(false);
 
   const userInfo = localStorage.getItem("userInfo")
     ? JSON.parse(localStorage.getItem("userInfo"))
@@ -23,66 +21,49 @@ export default function Topbar({ toggleSidebar, sidebarWidth }) {
 
   const [logout, { isLoading }] = useLogoutMutation();
 
-  const menuItems = {
-    public: [
-      { label: "Login", to: "/login" },
-      { label: "Register", to: "/register" },
-    ],
-    cashier: [
-      { label: "Orders", to: "/orders" },
-      { label: "Profile", to: "/profile" },
-      { label: "Logout", action: "logout" },
-    ],
-    customer: [
-      { label: "Orders", to: "/orders" },
-      { label: "Profile", to: "/profile" },
-      { label: "Loyalty Program", to: "/loyalty" },
-      { label: "Logout", action: "logout" },
-    ],
-    admin: [
-      { label: "Logout", action: "logout" },
-      { label: "Profile", to: "/profile" },
-    ],
-    manager: [
-      { label: "Logout", action: "logout" },
-      { label: "Profile", to: "/profile" },
-    ],
-  };
+  const links = [
+    { label: "Orders", to: "/orders" },
+    { label: "Profile", to: "/profile" },
+  ];
 
-  const dropdownItems = menuItems[role] || menuItems.public;
+  const loyaltySubLinks = [
+    { label: "Wallets", to: "/wallets" },
+    { label: "Rewards", to: "/rewards" },
+    { label: "Spendings", to: "/spendings" },
+  ];
 
   const marginLeft = role === "admin" || role === "manager" ? sidebarWidth : 0;
   const canToggleSidebar = role === "admin" || role === "manager";
 
-  const handleItemClick = async (item) => {
-    if (isLoading) return;
-
-    if (item.action === "logout") {
-      try {
-        await logout().unwrap();
-        dispatch(logoutAction());
-
-        // Redirect based on role
-        if (role === "admin" || role === "manager") {
-          navigate("/login");
-        } else {
-          navigate("/catalog");
-        }
-        // else keep them on current page (e.g., catalog)
-      } catch (err) {
-        console.error("Logout failed:", err);
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap();
+      dispatch(logoutAction());
+      if (role === "admin" || role === "manager") {
+        navigate("/login");
+      } else {
+        navigate("/catalog");
       }
-    } else if (item.to) {
-      navigate(item.to);
+    } catch (err) {
+      console.error("Logout failed:", err);
     }
   };
 
+  const handleClickOutside = (e) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      setLoyaltyOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <header className="bg-white shadow flex items-center justify-between px-4 md:px-6 py-4 transition-all duration-300 z-50">
-      <div
-        className="flex items-center gap-3 transition-all duration-300"
-        style={{ marginLeft }}
-      >
+    <header className="bg-white shadow flex items-center justify-between px-4 md:px-6 py-4 z-50">
+      {/* Left side */}
+      <div className="flex items-center gap-3" style={{ marginLeft }}>
         {canToggleSidebar && (
           <IconButton
             variant="text"
@@ -99,26 +80,76 @@ export default function Topbar({ toggleSidebar, sidebarWidth }) {
         </Typography>
       </div>
 
-      <div className="flex items-center gap-3">
-        <Menu placement="bottom-end">
-          <MenuItem className="cursor-pointer">
-            <div className="flex flex-col">
-              {dropdownItems.map((item) => (
-                <div
-                  key={item.label}
-                  onClick={() => handleItemClick(item)}
-                  className={`px-2 py-1 rounded cursor-pointer hover:bg-gray-200 ${
-                    isLoading ? "opacity-50 pointer-events-none" : ""
-                  }`}
-                >
-                  {isLoading && item.action === "logout"
-                    ? "Logging out..."
-                    : item.label}
-                </div>
-              ))}
-            </div>
-          </MenuItem>
-        </Menu>
+      {/* Right side links */}
+      <div className="flex items-center gap-3 relative">
+        {links.map((link) => (
+          <button
+            key={link.label}
+            onClick={() => navigate(link.to)}
+            className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+          >
+            {link.label}
+          </button>
+        ))}
+
+        {/* Loyalty Program dropdown */}
+        {role === "customer" && (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setLoyaltyOpen(!loyaltyOpen)}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800 flex items-center gap-1"
+            >
+              Loyalty Program {loyaltyOpen ? "▾" : "▸"}
+            </button>
+            {loyaltyOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50">
+                {loyaltySubLinks.map((sub) => (
+                  <button
+                    key={sub.label}
+                    onClick={() => {
+                      navigate(sub.to);
+                      setLoyaltyOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Logout */}
+        {role !== "public" && (
+          <button
+            onClick={handleLogout}
+            disabled={isLoading}
+            className={`px-3 py-2 rounded text-gray-800 hover:bg-gray-100 ${
+              isLoading ? "opacity-50 pointer-events-none" : ""
+            }`}
+          >
+            {isLoading ? "Logging out..." : "Logout"}
+          </button>
+        )}
+
+        {/* Login/Register for public */}
+        {role === "public" && (
+          <>
+            <button
+              onClick={() => navigate("/login")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Login
+            </button>
+            <button
+              onClick={() => navigate("/register")}
+              className="px-3 py-2 rounded hover:bg-gray-100 text-gray-800"
+            >
+              Register
+            </button>
+          </>
+        )}
       </div>
     </header>
   );
