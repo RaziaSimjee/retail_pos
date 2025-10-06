@@ -14,6 +14,10 @@ import connectDB from './db.js';
 import { authenticateJWT, authorizeRoles } from './middleware/auth.js';
 import emailRoutes from "./routes/emailRoutes.js";
 import saleRoutes from "./routes/saleRoutes.js";
+import supplierRoutes from "./routes/supplierRoutes.js";
+import purchaseOrderRoutes from "./routes/purchaseOrderRoutes.js";
+import purchaseItemRoutes from "./routes/purchaseItemRoutes.js";
+import supplierPaymentRoutes from "./routes/supplierPaymentRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -106,6 +110,9 @@ app.use('/api/addresses', userAddressRouter);
 app.use('/api/suppliers', SupplierRoutes);
 app.use("/api", emailRoutes);
 app.use("/api/sales", saleRoutes);
+app.use("/api/purchaseOrders", purchaseOrderRoutes);
+app.use("/api/purchaseItems", purchaseItemRoutes);
+app.use("/api/supplierPayments", supplierPaymentRoutes);
 // ===== Base Route =====
 app.get('/', (req, res) => {
   res.send('✅ Welcome to the API Gateway');

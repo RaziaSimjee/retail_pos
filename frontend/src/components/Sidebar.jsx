@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { IconButton, List, ListItem, Typography, Tooltip } from "@material-tailwind/react";
+import {
+  IconButton,
+  List,
+  ListItem,
+  Typography,
+  Tooltip,
+} from "@material-tailwind/react";
 import {
   FaHome,
   FaBoxes,
@@ -10,7 +16,12 @@ import {
   FaTags,
   FaMoneyBillWave,
 } from "react-icons/fa";
-import { AiOutlineDown, AiOutlineRight, AiOutlineArrowLeft, AiOutlineClose } from "react-icons/ai";
+import {
+  AiOutlineDown,
+  AiOutlineRight,
+  AiOutlineArrowLeft,
+  AiOutlineClose,
+} from "react-icons/ai";
 import storeLogo from "../assets/images/ClothesLogo.png";
 
 export default function Sidebar({
@@ -26,7 +37,7 @@ export default function Sidebar({
   const useOverlay = isMobile || isTablet;
 
   const sidebarLinks = [
-    { to: "/", label: "Dashboard", icon: <FaHome /> },
+    { to: "/dashboard", label: "Dashboard", icon: <FaHome /> },
     {
       label: "Inventory",
       icon: <FaBoxes />,
@@ -39,6 +50,9 @@ export default function Sidebar({
         { to: "/productvariants", label: "Product Variants" },
         { to: "/serialnumbers", label: "Serial Numbers" },
         { to: "/suppliers", label: "Suppliers" },
+                { to: "/supplierpayments", label: "Supplier Payments" },
+                { to: "/purchaseorders", label: "Purchase Orders" },
+        { to: "/purchaseitems", label: "Purchase Items" },
       ],
     },
     { to: "/catalog", label: "Catalog", icon: <FaTags /> },
@@ -66,7 +80,8 @@ export default function Sidebar({
     },
   ];
 
-  const toggleDropdown = (label) => setOpenDropdown(openDropdown === label ? null : label);
+  const toggleDropdown = (label) =>
+    setOpenDropdown(openDropdown === label ? null : label);
   const isActive = (to) => location.pathname === to;
 
   // Show text in expanded sidebar or overlay open
@@ -80,7 +95,10 @@ export default function Sidebar({
     <>
       {/* Overlay */}
       {useOverlay && isOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setIsOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black/40 z-40"
+          onClick={() => setIsOpen(false)}
+        />
       )}
 
       <aside
@@ -100,7 +118,11 @@ export default function Sidebar({
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="hover:bg-gray-200"
               >
-                {isCollapsed ? <AiOutlineRight size={20} /> : <AiOutlineArrowLeft size={20} />}
+                {isCollapsed ? (
+                  <AiOutlineRight size={20} />
+                ) : (
+                  <AiOutlineArrowLeft size={20} />
+                )}
               </IconButton>
             </div>
           )}
@@ -122,18 +144,24 @@ export default function Sidebar({
           {/* Logo */}
           <div
             className={`flex items-center gap-3 px-3 mb-6 flex-shrink-0 transition-all duration-300
-              ${isCollapsed ? "justify-center" : "justify-start"} ${useOverlay && "mt-4"}`}
+              ${isCollapsed ? "justify-center" : "justify-start"} ${
+              useOverlay && "mt-4"
+            }`}
             style={{ height: 26 }}
           >
             <img src={storeLogo} alt="store logo" className="h-8 w-8" />
             {!isCollapsed && (
-              <Typography className="font-bold text-gray-800 text-lg">EFS Store</Typography>
+              <Typography className="font-bold text-gray-800 text-lg">
+                EFS Store
+              </Typography>
             )}
           </div>
 
           {/* Scrollable menu */}
           <div
-            className={`flex-1 px-1 overflow-y-auto overflow-x-hidden ${isCollapsed ? "overflow-y-hidden" : ""}`}
+            className={`flex-1 px-1 overflow-y-auto overflow-x-hidden ${
+              isCollapsed ? "overflow-y-hidden" : ""
+            }`}
           >
             <List className="space-y-1">
               {sidebarLinks.map((link) => (
@@ -142,12 +170,18 @@ export default function Sidebar({
                   {link.subItems ? (
                     <>
                       {!showText ? (
-                        <Tooltip content={link.label} placement="right" offset={8}>
+                        <Tooltip
+                          content={link.label}
+                          placement="right"
+                          offset={8}
+                        >
                           <ListItem
                             className="rounded-lg flex items-center cursor-pointer px-1 py-2 w-16 justify-start hover:bg-gray-300 transition-all"
                             onClick={() => toggleDropdown(link.label)}
                           >
-                            <span className="text-blue-600 text-lg">{link.icon}</span>
+                            <span className="text-blue-600 text-lg">
+                              {link.icon}
+                            </span>
                           </ListItem>
                         </Tooltip>
                       ) : (
@@ -155,7 +189,9 @@ export default function Sidebar({
                           className="rounded-lg flex items-center cursor-pointer px-3 py-2 hover:bg-gray-300 transition-all"
                           onClick={() => toggleDropdown(link.label)}
                         >
-                          <span className="text-blue-600 text-lg">{link.icon}</span>
+                          <span className="text-blue-600 text-lg">
+                            {link.icon}
+                          </span>
                           <span className="ml-2 flex-1">{link.label}</span>
                           {openDropdown === link.label ? (
                             <AiOutlineDown size={16} />
@@ -188,13 +224,19 @@ export default function Sidebar({
                     // Single link
                     <>
                       {!showText ? (
-                        <Tooltip content={link.label} placement="right" offset={8}>
+                        <Tooltip
+                          content={link.label}
+                          placement="right"
+                          offset={8}
+                        >
                           <Link
                             to={link.to}
                             onClick={() => useOverlay && setIsOpen(false)}
                             className="rounded-lg flex items-center cursor-pointer px-1 py-2 w-16 justify-start hover:bg-gray-300 transition-all"
                           >
-                            <span className="text-blue-600 text-lg">{link.icon}</span>
+                            <span className="text-blue-600 text-lg">
+                              {link.icon}
+                            </span>
                           </Link>
                         </Tooltip>
                       ) : (
@@ -207,7 +249,9 @@ export default function Sidebar({
                               : "hover:bg-gray-300"
                           }`}
                         >
-                          <span className="text-blue-600 text-lg">{link.icon}</span>
+                          <span className="text-blue-600 text-lg">
+                            {link.icon}
+                          </span>
                           <span className="ml-2 flex-1">{link.label}</span>
                         </Link>
                       )}

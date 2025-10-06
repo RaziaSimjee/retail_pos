@@ -23,6 +23,9 @@ import ColorsAdminScreen from "./screens/ColorsAdminScreen.jsx";
 import ProductSizesAdminScreen from "./screens/ProductSizesAdminScreen.jsx";
 import UsersAdminScreen from "./screens/UsersAdminScreen.jsx";
 import SuppliersAdminScreen from "./screens/SuppliersAdminScreen.jsx";
+import PurchaseItemsAdminScreen from "./screens/PurchaseItemsAdminScreen.jsx";
+import PurchaseOrdersAdminScreen from "./screens/PurchaseOrdersAdminScreen.jsx";
+import SupplierPaymentsAdminScreen from "./screens/SupplierPaymentsAdminScreen.jsx";
 import NotFoundScreen from "./screens/NotFoundScreen.jsx";
 import Order from "./screens/Order.jsx";
 // Components
@@ -63,6 +66,9 @@ const router = createBrowserRouter(
         <Route path="users/:role" element={<UsersAdminScreen />} />
         <Route path="/addresses/:id" element={<AddressesScreen />} />
         <Route path="/suppliers" element={<SuppliersAdminScreen />} />
+        <Route path="/purchaseitems" element={<PurchaseItemsAdminScreen />} />
+        <Route path="/purchaseorders" element={<PurchaseOrdersAdminScreen />} />
+        <Route path="/supplierpayments" element={<SupplierPaymentsAdminScreen />} />
         <Route path="/wallets" element={<Wallets />} />
         <Route path="/rules" element={<Rules />} />
         <Route path="/rewards" element={<Rewards />} />
