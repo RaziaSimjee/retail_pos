@@ -37,6 +37,10 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       query: (customerId) => `/api/users/customer/${customerId}`,
       providesTags: ["Users"],
     }),
+    getAllUsers: builder.query({
+      query: () => `/api/users/`,
+      providesTags: ["Users"],
+    }),
     createCustomerLoyaltyAccount: builder.mutation({
       query: (customerData) => ({
         url: "/api/loyaltyProgram/customers",
@@ -84,6 +88,7 @@ export const {
   useGetUserByIdQuery,
   useGetUserByCustomerIdQuery,
   useGetUsersByRoleQuery,
+  useGetAllUsersQuery,
   useCreateCustomerLoyaltyAccountMutation,
   useDeleteUserMutation,
   useUpdateUserMutation,

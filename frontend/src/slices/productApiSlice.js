@@ -15,6 +15,12 @@ export const productslice = apiSlice.injectEndpoints({
       }),
       providesTags: (result, error, id) => [{ type: "Product", id }],
     }),
+    getProductsCount: builder.query({
+      query: () => ({
+        url: `${API_GATEWAY_URL}/productcatalog/products/count`,  
+      }),
+      keepUnusedDataFor: 5,
+    }),
     createProduct: builder.mutation({
       query: (payload) => ({
         url: `${API_GATEWAY_URL}/productcatalog/products`,
@@ -51,6 +57,7 @@ export const productslice = apiSlice.injectEndpoints({
 });
 export const {
   useGetProductsQuery,
+  useGetProductsCountQuery,
   useGetProductByIdQuery,
   useCreateProductMutation,
   useUpdateProductMutation,

@@ -403,3 +403,20 @@ export const getUserByCustomerId = async (req, res) => {
     res.status(500).json({ message: error.message || "Server error" });
   }
 };
+
+// ===== GET ALL USERS =====
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select(
+      "username email userRole DOB phoneNumber description isActive customerId"
+    );
+
+    res.status(200).json({
+      message: "All users fetched successfully",
+      users,
+    });
+  } catch (error) {
+    console.error("Get all users error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+};

@@ -17,7 +17,7 @@ export const saleSlice = apiSlice.injectEndpoints({
     }),
     getAllSales: builder.query({
       query: ({ skip = 0, take = 100 } = {}) => ({
-        url: `${API_GATEWAY_URL}/saleService/sales/${skip}/${take}`,
+        url: `http://localhost:5111/sales?${skip}&${take}`,
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -142,13 +142,18 @@ export const saleSlice = apiSlice.injectEndpoints({
       }),
       providesTags: ["Sales"],
     }),
-    exportSales: builder.query({
-      query: ({ fromId, toId }) => ({
-        url: `${API_GATEWAY_URL}/saleService/sales/export/${fromId}/${toId}`,
-        method: "GET",
-      }),
-      providesTags: ["Sales"],
-    }),
+exportSales: builder.query({
+  query: ({ fromId, toId }) => ({
+    url: `${API_GATEWAY_URL}/saleService/sales/export/${fromId}/${toId}`,
+    method: "GET",
+    // Tell RTK Query to handle binary data
+    responseHandler: async (response) => {
+      const blob = await response.blob(); // get binary file
+      return blob;
+    },
+  }),
+  providesTags: ["Sales"],
+}),
   }),
 });
 

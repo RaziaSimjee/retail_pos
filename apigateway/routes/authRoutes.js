@@ -9,7 +9,8 @@ import {
   forgotPassword,
   resetPassword,
   getUserById,
-  getUserByCustomerId
+  getUserByCustomerId,
+  getAllUsers,
 } from "../controllers/authController.js";
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.post("/logout", logout);
 router.get("/role/:role", getUsersByRole);
 router.get("/:id", getUserById);
 router.get("/customer/:customerId", getUserByCustomerId);
+router.get("/", getAllUsers);
 
 export default router;

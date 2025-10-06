@@ -8,6 +8,12 @@ export const categorySlice = apiSlice.injectEndpoints({
       }),
       keepUnusedDataFor: 5,
     }),
+    getCategoriesCount: builder.query({
+      query: () => ({
+        url: `${API_GATEWAY_URL}/productcatalog/categories/count`,
+      }),
+      keepUnusedDataFor: 5,
+    }),
     createCategory: builder.mutation({
       query: (payload) => ({
         url: `${API_GATEWAY_URL}/productcatalog/categories`,
@@ -45,6 +51,7 @@ export const categorySlice = apiSlice.injectEndpoints({
 
 export const {
   useGetCategoriesQuery,
+  useGetCategoriesCountQuery,
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,

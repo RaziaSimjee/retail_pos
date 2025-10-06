@@ -17,6 +17,7 @@ export const loyaltyProgramSlice = apiSlice.injectEndpoints({
     getCustomerById: builder.query({
       query: (id) => ({
         url: `${API_GATEWAY_URL}/loyaltyProgram/customers/${id}`,
+                method: "GET",
       }),
       providesTags: (result, error, id) => [{ type: "Product", id }],
     }),
@@ -24,6 +25,7 @@ export const loyaltyProgramSlice = apiSlice.injectEndpoints({
     getCustomersCount: builder.query({
       query: () => ({
         url: `${API_GATEWAY_URL}/loyaltyProgram/customers/count`,
+        method: "GET",
       }),
       providesTags: [{ type: "Loyalty" }],
     }),
@@ -31,6 +33,7 @@ export const loyaltyProgramSlice = apiSlice.injectEndpoints({
     getLoyaltyWalletsById: builder.query({
       query: (id) => ({
         url: `${API_GATEWAY_URL}/loyaltyProgram/loyaltywallets/${id}`,
+                method: "GET",
       }),
       keepUnusedDataFor: 5,
       invalidatesTags: [{ type: "Loyalty" }],
@@ -39,6 +42,7 @@ export const loyaltyProgramSlice = apiSlice.injectEndpoints({
     getAllLoyaltyWallets: builder.query({
       query: ({ skip = 0, take = 100 }) => ({
         url: `${API_GATEWAY_URL}/loyaltyProgram/loyaltywallets/${skip}/${take}`,
+                method: "GET",
       }),
       keepUnusedDataFor: 5,
       invalidatesTags: [{ type: "Loyalty" }],
@@ -47,6 +51,7 @@ export const loyaltyProgramSlice = apiSlice.injectEndpoints({
     getLoyaltyWalletsCount: builder.query({
       query: () => ({
         url: `${API_GATEWAY_URL}/loyaltyProgram/loyaltywallets/count`,
+                method: "GET",
       }),
       providesTags: [{ type: "Loyalty" }],
     }),
@@ -130,7 +135,7 @@ export const loyaltyProgramSlice = apiSlice.injectEndpoints({
     }),
 
     getAllPointsSpentByWalletId: builder.query({
-      query: ({walletId, skip=0, take=100}) => ({
+      query: ({ walletId, skip = 0, take = 100 }) => ({
         url: `${API_GATEWAY_URL}/loyaltyProgram/loyaltyspendings/wallet/${walletId}/${skip}/${take}`,
       }),
       providesTags: [{ type: "Loyalty" }],

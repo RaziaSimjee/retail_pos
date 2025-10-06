@@ -8,6 +8,12 @@ export const brandSlice = apiSlice.injectEndpoints({
       }),
       keepUnusedDataFor: 5,
     }),
+    getBrandsCount: builder.query({
+      query: () => ({
+        url: `${API_GATEWAY_URL}/productcatalog/brands/count`,
+      }),
+      keepUnusedDataFor: 5,
+    }),
     createBrand: builder.mutation({
       query: (payload) => ({
         url: `${API_GATEWAY_URL}/productcatalog/brands`,
@@ -44,6 +50,7 @@ export const brandSlice = apiSlice.injectEndpoints({
 });
 export const {
   useGetBrandsQuery,
+  useGetBrandsCountQuery,
   useCreateBrandMutation,
   useUpdateBrandMutation,
   useDeleteBrandMutation,
