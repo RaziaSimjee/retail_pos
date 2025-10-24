@@ -92,8 +92,7 @@ const Dashboard = () => {
   // Count suppliers
   const supplierCount = suppliersData?.suppliers?.length ?? 0;
 
-  // Optional: handle null values for CSV export
-  const replacer = (key, value) => (value === null ? "" : value);
+
 
   const handleDownload = async () => {
     try {
@@ -126,6 +125,49 @@ const Dashboard = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+
+            {/* Download Excel Form */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Export Sales Data</h2>
+        <div className="flex items-center gap-2 mb-4">
+          <label className="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={downloadAll}
+              onChange={(e) => setDownloadAll(e.target.checked)}
+            />
+            Download All (Sale ID 1-1000)
+          </label>
+        </div>
+
+        {!downloadAll && (
+          <div className="flex gap-2 mb-4">
+            <input
+              type="number"
+              min={1}
+              value={fromId}
+              onChange={(e) => setFromId(Number(e.target.value))}
+              placeholder="From Sale ID"
+              className="border p-1 rounded w-32"
+            />
+            <input
+              type="number"
+              min={1}
+              value={toId}
+              onChange={(e) => setToId(Number(e.target.value))}
+              placeholder="To Sale ID"
+              className="border p-1 rounded w-32"
+            />
+          </div>
+        )}
+
+        <button
+          onClick={handleDownload}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Download Sales Data (.xlsx)
+        </button>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -185,61 +227,10 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Download Excel Form */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Export Sales Data</h2>
-        <div className="flex items-center gap-2 mb-4">
-          <label className="flex items-center gap-1">
-            <input
-              type="checkbox"
-              checked={downloadAll}
-              onChange={(e) => setDownloadAll(e.target.checked)}
-            />
-            Download All (Sale ID 1-1000)
-          </label>
-        </div>
 
-        {!downloadAll && (
-          <div className="flex gap-2 mb-4">
-            <input
-              type="number"
-              min={1}
-              value={fromId}
-              onChange={(e) => setFromId(Number(e.target.value))}
-              placeholder="From Sale ID"
-              className="border p-1 rounded w-32"
-            />
-            <input
-              type="number"
-              min={1}
-              value={toId}
-              onChange={(e) => setToId(Number(e.target.value))}
-              placeholder="To Sale ID"
-              className="border p-1 rounded w-32"
-            />
-          </div>
-        )}
-
-        <button
-          onClick={handleDownload}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Download Sales Data (.xlsx)
-        </button>
-      </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4">Weekly Sales</h2>
-          <BarChart year={2025} month={10} />
-        </div>
 
-        <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4">Sales by Product</h2>
-          <PieChart productIds={[22]} />
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
@@ -256,6 +247,17 @@ const Dashboard = () => {
         <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
           <CustomerSalesChart />
         </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
+          <h2 className="text-lg font-semibold mb-4">Weekly Sales</h2>
+          <BarChart year={2025} month={10} />
+        </div>
+
+        <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
+          <h2 className="text-lg font-semibold mb-4">Sales by Product</h2>
+          <PieChart productIds={[22]} />
+        </div>
+      </div>
       </div>
     </div>
   );

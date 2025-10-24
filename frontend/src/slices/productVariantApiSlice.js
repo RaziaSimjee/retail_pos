@@ -105,12 +105,24 @@ export const productVariantSlice = apiSlice.injectEndpoints({
     }),
     getVariantByBarcode: builder.query({
       query: (barcode) => ({
-        url: `${API_GATEWAY_URL}/productcatalog/productvariants/barcode/${barcode}`,
+        url: `${API_GATEWAY_URL}/productcatalog/productvariants/bybarcode/${barcode}`,
       }),
       keepUnusedDataFor: 5,
       providesTags: (result, error, barcode) => [
         { type: "ProductVariants", barcode },
       ],
+    }),
+    readBarcodeImage: builder.mutation({
+      query: (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        return {
+          url: `${API_GATEWAY_URL}/productcatalog/barcode/read-file`,
+          method: "POST",
+          body: formData,
+        };
+      },
     }),
   }),
 });
@@ -128,4 +140,5 @@ export const {
   useUpdateProductVariantMutation,
   useDeleteProductVariantMutation,
   useCreateVariantBarcodeImgMutation,
+  useReadBarcodeImageMutation,
 } = productVariantSlice;
