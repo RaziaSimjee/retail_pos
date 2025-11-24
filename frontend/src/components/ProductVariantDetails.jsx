@@ -53,7 +53,7 @@ const ProductVariantDetails = () => {
       <div className="flex flex-col md:flex-row gap-6 mb-8">
         <div className="w-full md:w-1/2 h-72 overflow-hidden rounded-2xl">
           <img
-            src={getImageSrc(variant.imageURL)}
+            src={getImageSrc(variant.product.imageURL)}
             alt={variant.product?.productName}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           />

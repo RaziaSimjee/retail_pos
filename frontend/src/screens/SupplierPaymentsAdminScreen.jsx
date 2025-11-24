@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { FaEdit, FaPlus } from "react-icons/fa";
+import { FaEdit, FaPlus, FaFilter  } from "react-icons/fa";
 import {
   useGetAllSupplierPaymentsQuery,
   useAddSupplierPaymentMutation,
@@ -17,6 +17,7 @@ export default function SupplierPaymentsAdminScreen() {
 
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState("");
 
   const [formData, setFormData] = useState({
     purchaseOrderID: "",
@@ -151,9 +152,46 @@ export default function SupplierPaymentsAdminScreen() {
     }
   };
 
+  // -------------------------------------
+  // 🔍 FILTER PAYMENTS BASED ON SEARCH
+  // -------------------------------------
+  const filteredPayments = paymentsData?.payments?.filter((p) => {
+    const s = search.toLowerCase();
+
+    return (
+      p.purchaseOrderID?._id.toLowerCase().includes(s) ||
+      p.paymentStatus.toLowerCase().includes(s) ||
+      p.paymentMethod.toLowerCase().includes(s) ||
+      String(p.paidAmount).includes(s) ||
+      String(p.unpaidAmount).includes(s) ||
+      String(p.totalAmount).includes(s) ||
+      p.paidBy?.toLowerCase().includes(s)
+    );
+  });
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Supplier Payments</h2>
+
+     {/* 🔍 Search Field */}
+      <div className="relative w-full max-w-xs mb-6">
+        <FaFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+        <input
+          type="text"
+          placeholder="Search payments..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-8 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            <FaTimes />
+          </button>
+        )}
+      </div>
 
       {isLoading ? (
         <p>Loading supplier payments...</p>
@@ -176,7 +214,7 @@ export default function SupplierPaymentsAdminScreen() {
               </tr>
             </thead>
             <tbody>
-              {paymentsData?.payments?.map((payment) => (
+              {filteredPayments?.map((payment) => (
                 <tr key={payment._id} className="text-center border-b">
                   <td className="py-2 px-4">{payment.purchaseOrderID._id}</td>
                   <td className="py-2 px-4">{payment.paymentStatus}</td>
@@ -184,7 +222,9 @@ export default function SupplierPaymentsAdminScreen() {
                   <td className="py-2 px-4">{payment.paidAmount}</td>
                   <td className="py-2 px-4">{payment.unpaidAmount}</td>
                   <td className="py-2 px-4">{payment.totalAmount}</td>
-                  <td className="py-2 px-4">{new Date(payment.paymentDate).toLocaleDateString()}</td>
+                  <td className="py-2 px-4">
+                    {new Date(payment.paymentDate).toLocaleDateString()}
+                  </td>
                   <td className="py-2 px-4">{payment.paidBy}</td>
                   <td className="py-2 px-4">
                     {payment.paidAmount < payment.totalAmount && (
@@ -213,7 +253,7 @@ export default function SupplierPaymentsAdminScreen() {
         </>
       )}
 
-      {/* Modal */}
+      {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -241,7 +281,9 @@ export default function SupplierPaymentsAdminScreen() {
                     )
                     .map((order) => (
                       <option key={order._id} value={order._id}>
-                        {`${order._id} - Supplier: ${order.supplierID?.fullName || order.supplierID}`}
+                        {`${order._id} - Supplier: ${
+                          order.supplierID?.fullName || order.supplierID
+                        }`}
                       </option>
                     ))}
                 </select>

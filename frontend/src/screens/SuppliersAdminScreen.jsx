@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaFilter, FaTimes } from "react-icons/fa";
 import {
   useGetAllSuppliersQuery,
   useAddSupplierMutation,
@@ -19,6 +19,7 @@ export default function SuppliersAdminScreen() {
 
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -29,6 +30,18 @@ export default function SuppliersAdminScreen() {
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  // --------------------------
+  // 🔍 Filter suppliers
+  // --------------------------
+  const filteredSuppliers = data?.suppliers?.filter((sup) => {
+    const q = searchTerm.toLowerCase();
+    return (
+      sup.fullName.toLowerCase().includes(q) ||
+      sup.companyName?.toLowerCase().includes(q) ||
+      sup.email.toLowerCase().includes(q)
+    );
+  });
 
   const validateForm = () => {
     if (!formData.fullName.trim()) {
@@ -44,7 +57,9 @@ export default function SuppliersAdminScreen() {
       return false;
     }
     if (formData.phone && !/^\+?\d+$/.test(formData.phone)) {
-      toast.error("Phone number can only contain numbers and optional '+' sign");
+      toast.error(
+        "Phone number can only contain numbers and optional '+' sign"
+      );
       return false;
     }
     return true;
@@ -61,7 +76,8 @@ export default function SuppliersAdminScreen() {
   };
 
   const handleDeleteClick = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this supplier?")) return;
+    if (!window.confirm("Are you sure you want to delete this supplier?"))
+      return;
     try {
       await deleteSupplier(id).unwrap();
       toast.success("Supplier deleted successfully");
@@ -105,12 +121,38 @@ export default function SuppliersAdminScreen() {
     navigate(`/addresses/${supplierId}`);
   };
 
-  if (isLoading) return <p className="text-center mt-4 text-gray-500">Loading suppliers...</p>;
-  if (error) return <p className="text-center mt-4 text-red-500">Error loading suppliers</p>;
+  if (isLoading)
+    return (
+      <p className="text-center mt-4 text-gray-500">Loading suppliers...</p>
+    );
+  if (error)
+    return (
+      <p className="text-center mt-4 text-red-500">Error loading suppliers</p>
+    );
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Suppliers</h2>
+
+     {/* 🔍 Search Field */}
+      <div className="relative w-full max-w-xs mb-6">
+        <FaFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+        <input
+          type="text"
+          placeholder="Search suppliers by name, company, or email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-8 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            <FaTimes />
+          </button>
+        )}
+      </div>
 
       <table className="min-w-full bg-white border">
         <thead>
@@ -125,19 +167,31 @@ export default function SuppliersAdminScreen() {
           </tr>
         </thead>
         <tbody>
-          {data?.suppliers?.map((sup) => (
+          {filteredSuppliers?.map((sup) => (
             <tr key={sup._id} className="text-center border-b">
               <td className="py-2 px-4">{sup.fullName}</td>
               <td className="py-2 px-4">{sup.companyName || "-"}</td>
               <td className="py-2 px-4">{sup.email}</td>
               <td className="py-2 px-4">{sup.phone || "-"}</td>
-              <td className="py-2 px-4">{new Date(sup.createdAt).toLocaleString()}</td>
-              <td className="py-2 px-4">{new Date(sup.updatedAt).toLocaleString()}</td>
+              <td className="py-2 px-4">
+                {new Date(sup.createdAt).toLocaleString()}
+              </td>
+              <td className="py-2 px-4">
+                {new Date(sup.updatedAt).toLocaleString()}
+              </td>
               <td className="py-2 px-4 flex justify-center gap-2">
-                <button onClick={() => handleEditClick(sup)} className="text-blue-500 hover:text-blue-700" title="Edit">
+                <button
+                  onClick={() => handleEditClick(sup)}
+                  className="text-blue-500 hover:text-blue-700"
+                  title="Edit"
+                >
                   <FaEdit />
                 </button>
-                <button onClick={() => handleDeleteClick(sup._id)} className="text-red-500 hover:text-red-700" title="Delete">
+                <button
+                  onClick={() => handleDeleteClick(sup._id)}
+                  className="text-red-500 hover:text-red-700"
+                  title="Delete"
+                >
                   <FaTrash />
                 </button>
                 <Link
@@ -166,13 +220,52 @@ export default function SuppliersAdminScreen() {
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
             <h3 className="text-lg font-bold mb-4">Edit Supplier</h3>
             <form onSubmit={handleUpdateSubmit} className="space-y-3">
-              <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Full Name" />
-              <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Company Name" />
-              <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Email" />
-              <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Phone (+123456789)" />
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                className="w-full border rounded px-2 py-1"
+                placeholder="Full Name"
+              />
+              <input
+                type="text"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                className="w-full border rounded px-2 py-1"
+                placeholder="Company Name"
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full border rounded px-2 py-1"
+                placeholder="Email"
+              />
+              <input
+                type="text"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full border rounded px-2 py-1"
+                placeholder="Phone (+123456789)"
+              />
               <div className="flex justify-end gap-2 mt-3">
-                <button type="button" onClick={() => setSelectedSupplier(null)} className="px-3 py-1 border rounded hover:bg-gray-100">Cancel</button>
-                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Update</button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSupplier(null)}
+                  className="px-3 py-1 border rounded hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Update
+                </button>
               </div>
             </form>
           </div>
@@ -185,13 +278,52 @@ export default function SuppliersAdminScreen() {
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
             <h3 className="text-lg font-bold mb-4">Add Supplier</h3>
             <form onSubmit={handleAddSubmit} className="space-y-3">
-              <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Full Name" />
-              <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Company Name" />
-              <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Email" />
-              <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full border rounded px-2 py-1" placeholder="Phone (+123456789)" />
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                className="w-full border rounded px-2 py-1"
+                placeholder="Full Name"
+              />
+              <input
+                type="text"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                className="w-full border rounded px-2 py-1"
+                placeholder="Company Name"
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full border rounded px-2 py-1"
+                placeholder="Email"
+              />
+              <input
+                type="text"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full border rounded px-2 py-1"
+                placeholder="Phone (+123456789)"
+              />
               <div className="flex justify-end gap-2 mt-3">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-3 py-1 border rounded hover:bg-gray-100">Cancel</button>
-                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-3 py-1 border rounded hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Add
+                </button>
               </div>
             </form>
           </div>

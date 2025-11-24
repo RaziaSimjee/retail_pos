@@ -9,6 +9,7 @@ import {
 import { addToCart } from "../slices/cartSlice";
 import CartModal from "../components/CartModal.jsx";
 import { FaFilter, FaTimes } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const Catalog = () => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -19,11 +20,12 @@ const Catalog = () => {
 
   const [searchText, setSearchText] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [priceFilter, setPriceFilter] = useState([0, 1000000]);
   const [barcode, setBarcode] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [pagination, setPagination] = useState({ skip: 0, take: 8 });
 
   const webcamRef = useRef(null);
   const dispatch = useDispatch();
@@ -34,10 +36,7 @@ const Catalog = () => {
     data: variants = [],
     isLoading,
     isError,
-  } = useGetProductVariantsQuery({
-    skip: 0,
-    take: 100,
-  });
+  } = useGetProductVariantsQuery(pagination);
 
   // Barcode reading hooks
   const [readBarcodeImage] = useReadBarcodeImageMutation();
@@ -112,7 +111,7 @@ const Catalog = () => {
     });
   }, [variants, selectedCategory, searchText, selectedBrand, priceFilter]);
 
-  // Extract unique brands for dropdown
+  // Extract unique brands and categories for dropdown
   const brandOptions = useMemo(
     () =>
       Array.from(
@@ -144,6 +143,7 @@ const Catalog = () => {
 
   return (
     <div className="relative p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <h1 className="text-4xl font-bold text-gray-900">Catalog</h1>
 
@@ -174,9 +174,10 @@ const Catalog = () => {
         )}
       </div>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col md:flex-row md:items-center md:gap-4 mb-6">
-        <div className="relative flex-1">
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row md:items-center md:gap-4 mb-6 flex-wrap">
+        {/* Search */}
+        <div className="w-full md:w-64 mb-2 md:mb-0 relative">
           <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
           <input
             type="text"
@@ -195,48 +196,55 @@ const Catalog = () => {
           )}
         </div>
 
-        {/* Brand Filter */}
-        <select
-          value={selectedBrand}
-          onChange={(e) => setSelectedBrand(e.target.value)}
-          className="border rounded-xl px-3 py-2 text-sm focus:ring focus:ring-blue-300 focus:outline-none"
-        >
-          <option value="">All Brands</option>
-          {brandOptions.map((brand) => (
-            <option key={brand} value={brand}>
-              {brand}
-            </option>
-          ))}
-        </select>
+        {/* Brand */}
+        <div className="w-full md:w-40 mb-2 md:mb-0">
+          <select
+            value={selectedBrand}
+            onChange={(e) => setSelectedBrand(e.target.value)}
+            className="w-full border rounded-xl px-3 py-2 text-sm focus:ring focus:ring-blue-300 focus:outline-none"
+          >
+            <option value="">All Brands</option>
+            {brandOptions.map((brand) => (
+              <option key={brand} value={brand}>
+                {brand}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="border rounded-xl px-3 py-2 text-sm"
-        >
-          <option value="">All Categories</option>
-          {categoryOptions.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+        {/* Category */}
+        <div className="w-full md:w-40 mb-2 md:mb-0">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full border rounded-xl px-3 py-2 text-sm"
+          >
+            <option value="">All Categories</option>
+            {categoryOptions.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {/* Price Filter */}
-        <select
-          value={priceFilter.join("-")}
-          onChange={(e) => {
-            const [min, max] = e.target.value.split("-").map(Number);
-            setPriceFilter([min, max]);
-          }}
-          className="border rounded-xl px-3 py-2 text-sm focus:ring focus:ring-blue-300 focus:outline-none"
-        >
-          <option value="0-1000000">All Prices</option>
-          <option value="0-5000">0 - 5,000 Ks</option>
-          <option value="5000-20000">5,000 - 20,000 Ks</option>
-          <option value="20000-50000">20,000 - 50,000 Ks</option>
-          <option value="50000-1000000">50,000+ Ks</option>
-        </select>
+        {/* Price */}
+        <div className="w-full md:w-40 mb-2 md:mb-0">
+          <select
+            value={priceFilter.join("-")}
+            onChange={(e) => {
+              const [min, max] = e.target.value.split("-").map(Number);
+              setPriceFilter([min, max]);
+            }}
+            className="w-full border rounded-xl px-3 py-2 text-sm focus:ring focus:ring-blue-300 focus:outline-none"
+          >
+            <option value="0-1000000">All Prices</option>
+            <option value="0-5000">0 - 5,000 Ks</option>
+            <option value="5000-20000">5,000 - 20,000 Ks</option>
+            <option value="20000-50000">20,000 - 50,000 Ks</option>
+            <option value="50000-1000000">50,000+ Ks</option>
+          </select>
+        </div>
       </div>
 
       {/* Camera Modal */}
@@ -267,7 +275,7 @@ const Catalog = () => {
         </div>
       )}
 
-      {/* Catalog grid */}
+      {/* Catalog Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {barcode && scannedVariant && !fetchingVariant && (
           <div
@@ -289,9 +297,15 @@ const Catalog = () => {
               />
             </div>
             <div className="p-5 flex-1 flex flex-col justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">
                 {scannedVariant.product?.productName || "Unnamed Product"}
               </h2>
+              <Link
+                to={`/productvariants/${scannedVariant.productVariantID}`}
+                className="text-blue-500 hover:text-blue-600 text-sm underline mb-2"
+              >
+                View Details
+              </Link>
               <p className="text-gray-700 font-medium mb-2">
                 {scannedVariant.sellingPrice} Ks
               </p>
@@ -330,9 +344,15 @@ const Catalog = () => {
               />
             </div>
             <div className="p-5 flex-1 flex flex-col justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-gray-900 mb-1">
                 {variant.product?.productName || "Unnamed Product"}
               </h2>
+              <Link
+                to={`/productvariants/${variant.productVariantID}`}
+                className="text-blue-500 hover:text-blue-600 text-sm underline mb-2"
+              >
+                View Details
+              </Link>
               <p className="text-gray-700 font-medium mb-2">
                 {variant.sellingPrice} Ks
               </p>
@@ -348,6 +368,35 @@ const Catalog = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center gap-4 mt-6">
+        <button
+          onClick={() =>
+            setPagination((prev) => ({
+              ...prev,
+              skip: Math.max(prev.skip - prev.take, 0),
+            }))
+          }
+          disabled={pagination.skip === 0}
+          className="px-4 py-2 bg-gray-300 rounded-xl disabled:opacity-50"
+        >
+          Previous
+        </button>
+
+        <button
+          onClick={() =>
+            setPagination((prev) => ({
+              ...prev,
+              skip: prev.skip + prev.take,
+            }))
+          }
+          disabled={variants.length < pagination.take} // disable if fewer than page size
+          className="px-4 py-2 bg-gray-300 rounded-xl disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
 
       {/* Floating Cart Icon */}

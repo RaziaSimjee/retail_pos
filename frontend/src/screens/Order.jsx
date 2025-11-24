@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useGetUserByIdQuery } from "../slices/usersApiSlice";
+import { FaEdit, FaTrash, FaPlus, FaFilter, FaTimes } from "react-icons/fa";
 import DownloadReceiptButton from "../components/DownloadReceiptButton";
 import { toast } from "react-toastify";
 
@@ -7,6 +8,9 @@ const Order = () => {
   const [sales, setSales] = useState([]);
   const [addresses, setAddresses] = useState({});
   const [expandedSaleID, setExpandedSaleID] = useState(null);
+  const [search, setSearch] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
 
   const userInfo = localStorage.getItem("userInfo")
     ? JSON.parse(localStorage.getItem("userInfo"))
@@ -15,17 +19,12 @@ const Order = () => {
   const role = userInfo?.user?.role?.toLowerCase() || "customer";
   const userId = userInfo?.user?.userID;
 
-  console.log(userId);
-
-  // Fetch customer info if logged in user is customer
   const { data: userData } = useGetUserByIdQuery(
     role === "customer" ? userId : null,
     { skip: role !== "customer" }
   );
-  console.log(userData);
 
   const customerId = role === "customer" ? userData?.customerId : null;
-  console.log(userData);
 
   useEffect(() => {
     const fetchSales = async () => {
@@ -39,13 +38,12 @@ const Order = () => {
           )}`;
         } else if (role === "cashier") {
           url = `http://localhost:3000/api/sales/status/pending`;
-        } // manager/admin: fetch all orders (default url)
+        }
 
         const res = await fetch(url);
         const data = await res.json();
         setSales(data);
 
-        // Pre-fetch addresses
         const addressIDs = [...new Set(data.map((sale) => sale.addressID))];
         const addressResponses = await Promise.all(
           addressIDs.map((id) =>
@@ -66,7 +64,7 @@ const Order = () => {
       }
     };
 
-    if (role === "customer" && !customerId) return; // wait until customerID is loaded
+    if (role === "customer" && !customerId) return;
     fetchSales();
   }, [role, customerId]);
 
@@ -146,13 +144,86 @@ const Order = () => {
   const canEditDeliveryDate =
     role === "manager" || role === "admin" || role === "cashier";
 
+  // Filtered sales based on search and dropdowns
+  const filteredSales = sales.filter((sale) => {
+    const s = search.toLowerCase();
+    const orderFilter = orderStatusFilter.toLowerCase();
+    const paymentFilter = paymentStatusFilter.toLowerCase();
+    const address = addresses[sale.addressID] || {};
+
+    const matchesSearch =
+      sale.saleID.toString().toLowerCase().includes(s) ||
+      sale.customerID.toString().toLowerCase().includes(s) ||
+      (sale.orderStatus || "").toLowerCase().includes(s) ||
+      (sale.paymentStatus || "").toLowerCase().includes(s) ||
+      (sale.productList || [])
+        .map((p) => p.productName)
+        .join(" ")
+        .toLowerCase()
+        .includes(s) ||
+      (address.label || "").toLowerCase().includes(s);
+
+    const matchesOrderStatus =
+      !orderStatusFilter || sale.orderStatus.toLowerCase() === orderFilter;
+    const matchesPaymentStatus =
+      !paymentStatusFilter ||
+      sale.paymentStatus.toLowerCase() === paymentFilter;
+
+    return matchesSearch && matchesOrderStatus && matchesPaymentStatus;
+  });
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Orders</h1>
 
-      {sales.length === 0 && <p>No sales found.</p>}
+      <div className="flex flex-wrap gap-2 mb-4 items-center">
+        {/* Search Field */}
+        <div className="relative flex-1 max-w-xs">
+          <FaFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search purchase orders..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-8 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <FaTimes />
+            </button>
+          )}
+        </div>
 
-      {sales.map((sale) => {
+        {/* Filters */}
+        <select
+          value={orderStatusFilter}
+          onChange={(e) => setOrderStatusFilter(e.target.value)}
+          className="border rounded-xl px-3 py-2 text-sm h-10" // <-- h-10 to match search height
+        >
+          <option value="">All Order Status</option>
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+
+        <select
+          value={paymentStatusFilter}
+          onChange={(e) => setPaymentStatusFilter(e.target.value)}
+          className="border rounded-xl px-3 py-2 text-sm h-10" // <-- h-10 to match search height
+        >
+          <option value="">All Payment Status</option>
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      {filteredSales.length === 0 && <p>No sales found.</p>}
+
+      {filteredSales.map((sale) => {
         const address = addresses[sale.addressID];
 
         return (

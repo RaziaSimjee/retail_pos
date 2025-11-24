@@ -15,19 +15,20 @@ import { FaFilter, FaTimes } from "react-icons/fa";
 const ProductsAdminScreen = () => {
   const [pagination, setPagination] = useState({ skip: 0, take: 8 });
   const [searchText, setSearchText] = useState("");
-  const [modalMode, setModalMode] = useState(null); // "add" | "edit" | null
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+
+  const [modalMode, setModalMode] = useState(null);
   const [currentProduct, setCurrentProduct] = useState(null);
 
-  const { data = [], isLoading, isError, refetch } = useGetProductsQuery(
-    pagination
-  );
+  const { data = [], isLoading, isError, refetch } = useGetProductsQuery(pagination);
 
-  const { data: categories } = useGetCategoriesQuery({ skip: 0, take: 100 });
-  const { data: brands } = useGetBrandsQuery({ skip: 0, take: 100 });
+  const { data: categories = [] } = useGetCategoriesQuery({ skip: 0, take: 100 });
+  const { data: brands = [] } = useGetBrandsQuery({ skip: 0, take: 100 });
 
-  const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
-  const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
-  const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
+  const [deleteProduct] = useDeleteProductMutation();
+  const [updateProduct] = useUpdateProductMutation();
+  const [createProduct] = useCreateProductMutation();
 
   const emptyProduct = {
     productName: "",
@@ -39,12 +40,12 @@ const ProductsAdminScreen = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
+
     try {
       await deleteProduct({ id }).unwrap();
       refetch();
       alert("Product deleted successfully!");
     } catch (error) {
-      console.error("Delete failed:", error);
       alert("Failed to delete product.");
     }
   };
@@ -71,21 +72,28 @@ const ProductsAdminScreen = () => {
       refetch();
       setModalMode(null);
     } catch (error) {
-      console.error("Save failed:", error);
       alert("Failed to save product.");
     }
   };
 
-  // Filter products by search text
+  // 🔍 FILTER PRODUCTS
   const filteredProducts = useMemo(() => {
-    if (!searchText.trim()) return data;
-    return data.filter(
-      (p) =>
+    return data.filter((p) => {
+      const matchesSearch =
+        !searchText ||
         p.productName?.toLowerCase().includes(searchText.toLowerCase()) ||
         p.description?.toLowerCase().includes(searchText.toLowerCase()) ||
-        String(p.productID).includes(searchText)
-    );
-  }, [data, searchText]);
+        String(p.productID).includes(searchText);
+
+      const matchesBrand =
+        !selectedBrand || p.brandID === Number(selectedBrand);
+
+      const matchesCategory =
+        !selectedCategory || p.categoryID === Number(selectedCategory);
+
+      return matchesSearch && matchesBrand && matchesCategory;
+    });
+  }, [data, searchText, selectedBrand, selectedCategory]);
 
   if (isLoading)
     return <p className="text-center mt-4 text-gray-400">Loading products...</p>;
@@ -96,29 +104,61 @@ const ProductsAdminScreen = () => {
     <div className="relative p-6 bg-gray-50 min-h-screen">
       {!modalMode && <FloatingAddButton onClick={handleAdd} />}
 
-      <h1 className="text-4xl font-bold mb-6 text-gray-900">Products</h1>
+      <h1 className="text-4xl font-bold mb-4 text-gray-900">Products</h1>
 
-      {/* Search Field */}
-      <div className="relative w-full max-w-xs mb-6">
-        <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-        <input
-          type="text"
-          placeholder="Search by name, description, or ID..."
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          className="w-full pl-10 pr-8 py-2 border rounded-xl focus:ring focus:ring-blue-300 focus:outline-none text-sm"
-        />
-        {searchText && (
-          <button
-            onClick={() => setSearchText("")}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-          >
-            <FaTimes />
-          </button>
-        )}
+      {/* 🔽 FILTER BAR */}
+      <div className="flex flex-wrap gap-4 mb-6">
+
+        {/* 🔍 Search */}
+        <div className="relative w-full max-w-xs">
+          <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search by name, description, or ID..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-full pl-10 pr-8 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {searchText && (
+            <button
+              onClick={() => setSearchText("")}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+            >
+              <FaTimes />
+            </button>
+          )}
+        </div>
+
+        {/* 🏷 BRAND FILTER */}
+        <select
+          value={selectedBrand}
+          onChange={(e) => setSelectedBrand(e.target.value)}
+          className="border rounded-xl px-3 py-2 text-sm"
+        >
+          <option value="">All Brands</option>
+          {brands?.map((b) => (
+            <option key={b.brandID} value={b.brandID}>
+              {b.brandName}
+            </option>
+          ))}
+        </select>
+
+        {/* 📂 CATEGORY FILTER */}
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="border rounded-xl px-3 py-2 text-sm"
+        >
+          <option value="">All Categories</option>
+          {categories?.map((c) => (
+            <option key={c.categoryID} value={c.categoryID}>
+              {c.categoryName}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Product Cards */}
+      {/* 🛍 PRODUCT GRID */}
       <div className="flex flex-wrap justify-start gap-6">
         {filteredProducts.length === 0 ? (
           <p className="text-gray-500 w-full text-center">No products found.</p>
@@ -126,18 +166,14 @@ const ProductsAdminScreen = () => {
           filteredProducts.map((product) => (
             <div
               key={product.productID}
-              className="flex flex-col bg-white rounded-3xl shadow-lg hover:shadow-2xl transition overflow-hidden border border-gray-200 hover:border-blue-400"
+              className="flex flex-col bg-white rounded-3xl shadow-lg border overflow-hidden hover:border-blue-400 transition p-0"
               style={{ width: "250px" }}
             >
               <div className="w-full h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
                 <img
                   src={product.imageURL || "../assets/images/placeholderDress.jpg"}
                   alt={product.productName}
-                  onError={(e) => {
-                    if (e.target.src !== "../assets/images/placeholderDress.jpg") {
-                      e.target.src = "../assets/images/placeholderDress.jpg";
-                    }
-                  }}
+                  onError={(e) => (e.target.src = "../assets/images/placeholderDress.jpg")}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -146,14 +182,12 @@ const ProductsAdminScreen = () => {
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 flex justify-between items-center">
                     <span>{product.productName}</span>
-                    <span className="text-sm font-thin text-gray-400">
-                      ID: {product.productID}
-                    </span>
+                    <span className="text-sm text-gray-400">ID: {product.productID}</span>
                   </h2>
 
                   <Link
                     to={`/products/${product.productID}`}
-                    className="text-blue-500 hover:text-blue-600 text-sm mt-1 inline-block underline"
+                    className="text-blue-500 hover:text-blue-600 text-sm underline mt-1 inline-block"
                   >
                     View Details
                   </Link>
@@ -166,14 +200,13 @@ const ProductsAdminScreen = () => {
                 <div className="flex gap-2 mt-4">
                   <button
                     onClick={() => handleEdit(product)}
-                    className="flex-1 bg-blue-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-blue-600 transition font-medium"
+                    className="flex-1 bg-blue-500 text-white py-2 text-sm rounded-lg hover:bg-blue-600"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(product.productID)}
-                    disabled={isDeleting}
-                    className="flex-1 bg-red-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-red-600 transition font-medium disabled:opacity-50"
+                    className="flex-1 bg-red-500 text-white py-2 text-sm rounded-lg hover:bg-red-600"
                   >
                     Delete
                   </button>
@@ -217,7 +250,6 @@ const ProductsAdminScreen = () => {
           product={currentProduct}
           onClose={() => setModalMode(null)}
           onSubmit={handleModalSubmit}
-          isLoading={modalMode === "add" ? isCreating : isUpdating}
           categories={categories}
           brands={brands}
         />

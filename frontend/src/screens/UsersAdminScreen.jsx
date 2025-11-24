@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import FloatingAddButton from "../components/FloatingAddButton.jsx";
@@ -9,7 +9,7 @@ import {
   useDeleteUserMutation,
   useRegisterMutation,
 } from "../slices/usersApiSlice.js";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaFilter, FaTimes } from "react-icons/fa";
 
 export default function UsersAdminScreen() {
   const { role } = useParams();
@@ -23,12 +23,13 @@ export default function UsersAdminScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
 
+  const [searchText, setSearchText] = useState("");
+
   const handleAddSubmit = async (formData) => {
     setLoadingAction(true);
     try {
-      const res = await registerUser(formData).unwrap();
+      await registerUser(formData).unwrap();
       toast.success("User registered successfully");
-      console.log(res)
       setShowAddModal(false);
       refetch();
     } catch (err) {
@@ -64,12 +65,53 @@ export default function UsersAdminScreen() {
     }
   };
 
+  // -------------------------------------------
+  // 🔍 FILTERING (search)
+  // -------------------------------------------
+  const filteredUsers = useMemo(() => {
+    if (!data?.users) return [];
+    if (!searchText.trim()) return data.users;
+
+    const lower = searchText.toLowerCase();
+
+    return data.users.filter((u) => {
+      return (
+        u.username?.toLowerCase().includes(lower) ||
+        u.email?.toLowerCase().includes(lower) ||
+        u.userRole?.toLowerCase().includes(lower) ||
+        u.description?.toLowerCase().includes(lower) ||
+        u.phoneNumber?.toLowerCase().includes(lower) ||
+        String(u.userID).includes(lower)
+      );
+    });
+  }, [data, searchText]);
+
   if (isLoading) return <p>Loading users...</p>;
   if (error) return <p>Error loading users</p>;
 
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4 capitalize">{role} Users</h2>
+
+      {/* 🔍 Search Field */}
+      <div className="relative w-full max-w-xs mb-6">
+        <FaFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          className="w-full pl-10 pr-8 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        />
+        {searchText && (
+          <button
+            onClick={() => setSearchText("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            <FaTimes />
+          </button>
+        )}
+      </div>
 
       {/* Users Table */}
       <table className="min-w-full bg-white border">
@@ -84,8 +126,9 @@ export default function UsersAdminScreen() {
             <th className="py-2 px-4 border">Actions</th>
           </tr>
         </thead>
+
         <tbody>
-          {data?.users?.map((user) => (
+          {filteredUsers.map((user) => (
             <tr key={user.userID} className="text-center">
               <td className="py-2 px-4 border">{user.username}</td>
               <td className="py-2 px-4 border">{user.email}</td>
@@ -95,19 +138,22 @@ export default function UsersAdminScreen() {
               </td>
               <td className="py-2 px-4 border">{user.phoneNumber || "-"}</td>
               <td className="py-2 px-4 border">{user.description || "-"}</td>
+
               <td className="py-2 px-4 border flex justify-center items-center space-x-2">
                 <button
                   onClick={() => setSelectedUser(user)}
-                  className="flex items-center space-x-1 text-blue-500 hover:text-blue-700"
+                  className="text-blue-500 hover:text-blue-700"
                 >
                   <FaEdit />
                 </button>
+
                 <button
                   onClick={() => handleDeleteClick(user.userID)}
-                  className="flex items-center space-x-1 text-red-500 hover:text-red-700"
+                  className="text-red-500 hover:text-red-700"
                 >
                   <FaTrash />
                 </button>
+
                 <Link
                   to={`/addresses/${user.userID}`}
                   className="text-green-600 underline hover:text-green-800"

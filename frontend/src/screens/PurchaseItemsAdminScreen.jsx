@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaFilter, FaTimes } from "react-icons/fa";
 import {
   useGetAllPurchaseItemsQuery,
   useAddPurchaseItemMutation,
@@ -21,6 +21,7 @@ export default function PurchaseItemsAdminScreen() {
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [search, setSearch] = useState("");
 
   const [formData, setFormData] = useState({
     purchaseItemsID: "",
@@ -101,6 +102,29 @@ export default function PurchaseItemsAdminScreen() {
     }
   };
 
+  // Filtered items for search
+  const filteredItems = itemsData?.items?.filter((item) => {
+    const s = search.toLowerCase();
+
+    const variant = variantsData?.find(
+      (v) => v.productVariantID === item.purchaseItemsID
+    ) || {};
+
+    const order = ordersData?.orders?.find(
+      (o) => o._id === item.purchaseOrderID
+    ) || {};
+
+    return (
+      (variant.product?.productName || "").toString().toLowerCase().includes(s) ||
+      (variant.productVariantID || "").toString().toLowerCase().includes(s) ||
+      (item.purchaseOrderID || "").toString().toLowerCase().includes(s) ||
+      (order.supplierID?.fullName || order.supplierID || "").toString().toLowerCase().includes(s) ||
+      (item.purchaseQuantity || "").toString().toLowerCase().includes(s) ||
+      (item.perItemPrice || "").toString().toLowerCase().includes(s) ||
+      (item.subTotal || "").toString().toLowerCase().includes(s)
+    );
+  });
+
   if (isLoading)
     return (
       <p className="text-center mt-4 text-gray-500">Loading purchase items...</p>
@@ -114,6 +138,26 @@ export default function PurchaseItemsAdminScreen() {
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Purchase Items</h2>
 
+     {/* 🔍 Search Field */}
+      <div className="relative w-full max-w-xs mb-6">
+        <FaFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+        <input
+          type="text"
+          placeholder="Search purchase orders..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-8 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            <FaTimes />
+          </button>
+        )}
+      </div>
+
       <table className="min-w-full bg-white border">
         <thead>
           <tr className="bg-gray-200">
@@ -126,7 +170,7 @@ export default function PurchaseItemsAdminScreen() {
           </tr>
         </thead>
         <tbody>
-          {itemsData?.items?.map((item) => (
+          {filteredItems?.map((item) => (
             <tr key={item._id} className="text-center border-b">
               <td className="py-2 px-4">{item.purchaseItemsID}</td>
               <td className="py-2 px-4">
