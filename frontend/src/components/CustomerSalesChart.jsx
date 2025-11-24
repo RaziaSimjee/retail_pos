@@ -70,20 +70,21 @@ const CustomerSalesChart = () => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-lg">
-      <h2 className="text-lg font-semibold mb-4">Customer Sales</h2>
+    <div >
+
 
       {/* Customer Dropdown */}
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Select Customer:</label>
+ 
+      <div className="flex items-center gap-3 mb-4">
+        <label className="font-medium text-gray-700 text-sm">Customer:</label>
         <select
-          className="border p-2 rounded w-64"
+          className="border border-gray-300 bg-white px-3 py-1 rounded-md text-sm focus:ring focus:ring-blue-200"
           value={selectedCustomerId ?? ""}
           onChange={(e) => setSelectedCustomerId(Number(e.target.value))}
         >
           {customers.map((customer) => (
             <option key={customer.customerId} value={customer.customerId}>
-              {customer.customerId} - {customer.username}
+              {customer.username} (ID: {customer.customerId})
             </option>
           ))}
         </select>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import Webcam from "react-webcam";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -8,6 +8,7 @@ import {
 } from "../slices/productVariantApiSlice";
 import { addToCart } from "../slices/cartSlice";
 import CartModal from "../components/CartModal.jsx";
+import { FaFilter, FaTimes } from "react-icons/fa";
 
 const Catalog = () => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -15,46 +16,58 @@ const Catalog = () => {
   const isPrivileged = ["admin", "cashier", "manager"].includes(
     userInfo?.user?.role
   );
-  const webcamRef = useRef(null);
-  const [showCamera, setShowCamera] = useState(false);
 
-  const {
-    data: variants,
-    isLoading,
-    isError,
-  } = useGetProductVariantsQuery({ skip: 0, take: 100 });
-  const dispatch = useDispatch();
-  const [cartOpen, setCartOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("");
+  const [priceFilter, setPriceFilter] = useState([0, 1000000]);
   const [barcode, setBarcode] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const webcamRef = useRef(null);
+  const dispatch = useDispatch();
   const { cartItems = [] } = useSelector((state) => state.cart || {});
 
-  const handleAddToCart = (variant) => {
-    if (variant.quantity === 0) return;
+  // Fetch product variants
+  const {
+    data: variants = [],
+    isLoading,
+    isError,
+  } = useGetProductVariantsQuery({
+    skip: 0,
+    take: 100,
+  });
 
-    const cartItem = {
-      _id: variant.productVariantID,
-      name: variant.product?.productName || "Unnamed Product",
-      price: variant.sellingPrice || 0,
-      qty: 1,
-      quantity: variant.quantity,
-      imageURL: variant.imageURL,
-      size: variant.productSize?.sizeName,
-      color: variant.productColor?.colorName,
-    };
-
-    dispatch(addToCart(cartItem));
-    setCartOpen(true); // open cart modal
-  };
-
+  // Barcode reading hooks
   const [readBarcodeImage] = useReadBarcodeImageMutation();
   const { data: scannedVariant, isFetching: fetchingVariant } =
     useGetVariantByBarcodeQuery(barcode, { skip: !barcode });
 
+  // Add to cart
+  const handleAddToCart = (variant) => {
+    if (variant.quantity === 0) return;
+
+    dispatch(
+      addToCart({
+        _id: variant.productVariantID,
+        name: variant.product?.productName || "Unnamed Product",
+        price: variant.sellingPrice || 0,
+        qty: 1,
+        quantity: variant.quantity,
+        imageURL: variant.product.imageURL,
+        size: variant.productSize?.sizeName,
+        color: variant.productColor?.colorName,
+      })
+    );
+    setCartOpen(true);
+  };
+
+  // Capture barcode from webcam
   const handleCapture = async () => {
     const imageSrc = webcamRef.current.getScreenshot();
     if (!imageSrc) return;
 
-    // Convert base64 to Blob
     const byteString = atob(imageSrc.split(",")[1]);
     const mimeString = imageSrc.split(",")[0].split(":")[1].split(";")[0];
     const ab = new ArrayBuffer(byteString.length);
@@ -73,6 +86,53 @@ const Catalog = () => {
     }
   };
 
+  // Filtered variants based on search, brand, price
+  const filteredVariants = useMemo(() => {
+    return variants.filter((variant) => {
+      const matchesCategory =
+        !selectedCategory ||
+        variant.product?.category?.categoryName === selectedCategory;
+
+      const matchesSearch =
+        !searchText ||
+        variant.product?.productName
+          ?.toLowerCase()
+          .includes(searchText.toLowerCase()) ||
+        variant.description?.toLowerCase().includes(searchText.toLowerCase()) ||
+        String(variant.productVariantID).includes(searchText);
+
+      const matchesBrand =
+        !selectedBrand || variant.product?.brand?.brandName === selectedBrand;
+
+      const matchesPrice =
+        variant.sellingPrice >= priceFilter[0] &&
+        variant.sellingPrice <= priceFilter[1];
+
+      return matchesCategory && matchesSearch && matchesBrand && matchesPrice;
+    });
+  }, [variants, selectedCategory, searchText, selectedBrand, priceFilter]);
+
+  // Extract unique brands for dropdown
+  const brandOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          variants.map((v) => v.product?.brand?.brandName).filter(Boolean)
+        )
+      ),
+    [variants]
+  );
+
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          variants.map((v) => v.product?.category?.categoryName).filter(Boolean)
+        )
+      ),
+    [variants]
+  );
+
   if (isLoading)
     return (
       <p className="text-center mt-6 text-gray-400">Loading products...</p>
@@ -84,22 +144,20 @@ const Catalog = () => {
 
   return (
     <div className="relative p-6 bg-gray-50 min-h-screen">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <h1 className="text-4xl font-bold text-gray-900">Catalog</h1>
 
         {isPrivileged && (
-          <div className="flex gap-3">
-            {/* Take photo directly */}
+          <div className="flex gap-3 flex-wrap">
             <button
               className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition"
               onClick={() => setShowCamera(true)}
             >
-              📷 Take Image
+              📷 Scan product
             </button>
 
-            {/* File upload fallback */}
             <label className="cursor-pointer bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-              🗂 Choose Image
+              🗂 Filter by barcode
               <input
                 type="file"
                 accept="image/*"
@@ -107,14 +165,78 @@ const Catalog = () => {
                   const file = e.target.files[0];
                   if (!file) return;
                   const result = await readBarcodeImage(file).unwrap();
-                  const code = result.replace(/['"]+/g, "").trim();
-                  setBarcode(code);
+                  setBarcode(result.replace(/['"]+/g, "").trim());
                 }}
                 className="hidden"
               />
             </label>
           </div>
         )}
+      </div>
+
+      {/* Filters and Search */}
+      <div className="flex flex-col md:flex-row md:items-center md:gap-4 mb-6">
+        <div className="relative flex-1">
+          <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search by name, description, or ID..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-full pl-10 pr-8 py-2 border rounded-xl focus:ring focus:ring-blue-300 focus:outline-none text-sm"
+          />
+          {searchText && (
+            <button
+              onClick={() => setSearchText("")}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <FaTimes />
+            </button>
+          )}
+        </div>
+
+        {/* Brand Filter */}
+        <select
+          value={selectedBrand}
+          onChange={(e) => setSelectedBrand(e.target.value)}
+          className="border rounded-xl px-3 py-2 text-sm focus:ring focus:ring-blue-300 focus:outline-none"
+        >
+          <option value="">All Brands</option>
+          {brandOptions.map((brand) => (
+            <option key={brand} value={brand}>
+              {brand}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="border rounded-xl px-3 py-2 text-sm"
+        >
+          <option value="">All Categories</option>
+          {categoryOptions.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+
+        {/* Price Filter */}
+        <select
+          value={priceFilter.join("-")}
+          onChange={(e) => {
+            const [min, max] = e.target.value.split("-").map(Number);
+            setPriceFilter([min, max]);
+          }}
+          className="border rounded-xl px-3 py-2 text-sm focus:ring focus:ring-blue-300 focus:outline-none"
+        >
+          <option value="0-1000000">All Prices</option>
+          <option value="0-5000">0 - 5,000 Ks</option>
+          <option value="5000-20000">5,000 - 20,000 Ks</option>
+          <option value="20000-50000">20,000 - 50,000 Ks</option>
+          <option value="50000-1000000">50,000+ Ks</option>
+        </select>
       </div>
 
       {/* Camera Modal */}
@@ -145,21 +267,19 @@ const Catalog = () => {
         </div>
       )}
 
-      {/* Scanned product preview */}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 py-4">
-        {/* If barcode scanned, show product first */}
+      {/* Catalog grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {barcode && scannedVariant && !fetchingVariant && (
           <div
             key={`scanned-${scannedVariant.productVariantID}`}
-            className="flex flex-col bg-white rounded-3xl shadow-lg hover:shadow-2xl transition overflow-hidden border  border-gray-200 "
+            className="flex flex-col bg-white rounded-3xl shadow-lg hover:shadow-2xl transition overflow-hidden border border-gray-200"
           >
             <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
               <img
                 src={
-                  scannedVariant.imageURL?.startsWith("data:image")
-                    ? scannedVariant.imageURL
-                    : `data:image/png;base64,${scannedVariant.imageURL}`
+                  scannedVariant.product.imageURL?.startsWith("data:image")
+                    ? scannedVariant.product.imageURL
+                    : `data:image/png;base64,${scannedVariant.product.imageURL}`
                 }
                 alt={scannedVariant.product?.productName || "Variant"}
                 onError={(e) =>
@@ -168,7 +288,6 @@ const Catalog = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-
             <div className="p-5 flex-1 flex flex-col justify-between">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
                 {scannedVariant.product?.productName || "Unnamed Product"}
@@ -179,7 +298,6 @@ const Catalog = () => {
               <p className="text-gray-600 text-sm flex-1 mb-4 line-clamp-2">
                 {scannedVariant.description || "No description available."}
               </p>
-
               {!isCustomer && (
                 <button
                   onClick={() => handleAddToCart(scannedVariant)}
@@ -191,11 +309,8 @@ const Catalog = () => {
             </div>
           </div>
         )}
-      </div>
 
-      {/* Catalog grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {variants?.map((variant) => (
+        {filteredVariants.map((variant) => (
           <div
             key={variant.productVariantID}
             className="flex flex-col bg-white rounded-3xl shadow-lg hover:shadow-2xl transition overflow-hidden border border-gray-200"
@@ -203,9 +318,9 @@ const Catalog = () => {
             <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
               <img
                 src={
-                  variant.imageURL?.startsWith("data:image")
-                    ? variant.imageURL
-                    : `data:image/png;base64,${variant.imageURL}`
+                  variant.product.imageURL?.startsWith("data:image")
+                    ? variant.product.imageURL
+                    : `data:image/png;base64,${variant.product.imageURL}`
                 }
                 alt={variant.product?.productName || "Variant"}
                 onError={(e) =>
@@ -214,7 +329,6 @@ const Catalog = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-
             <div className="p-5 flex-1 flex flex-col justify-between">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
                 {variant.product?.productName || "Unnamed Product"}
@@ -225,7 +339,6 @@ const Catalog = () => {
               <p className="text-gray-600 text-sm flex-1 mb-4 line-clamp-2">
                 {variant.description || "No description available."}
               </p>
-
               <button
                 onClick={() => handleAddToCart(variant)}
                 className="w-full bg-green-500 text-white py-2 px-3 text-sm rounded-lg hover:bg-green-600 transition font-medium"
@@ -237,7 +350,7 @@ const Catalog = () => {
         ))}
       </div>
 
-      {/* Floating Cart Icon - Bottom Right */}
+      {/* Floating Cart Icon */}
       <button
         className="fixed bottom-6 right-6 bg-black text-white p-4 rounded-full shadow-lg hover:bg-gray-800 transition flex items-center justify-center z-50"
         onClick={() => setCartOpen(true)}

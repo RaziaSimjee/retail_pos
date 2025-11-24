@@ -7,6 +7,7 @@ import {
 } from "../slices/productVariantApiSlice";
 import ProductVariantModal from "../components/ProductVariantModal.jsx";
 import FloatingAddButton from "../components/FloatingAddButton.jsx";
+import { FaFilter, FaTimes } from "react-icons/fa";
 
 const ProductsVariantAdminScreen = () => {
   const {
@@ -24,6 +25,7 @@ const ProductsVariantAdminScreen = () => {
     useCreateProductVariantMutation();
 
   const [modalMode, setModalMode] = useState(null); // "add" | "edit" | null
+    const [searchText, setSearchText] = useState("");
   const [currentVariant, setCurrentVariant] = useState(null);
 
   const emptyVariant = {
@@ -112,7 +114,25 @@ const handleModalSubmit = async (formData) => {
       <h1 className="text-4xl font-bold mb-8 text-gray-900">
         Product Variants
       </h1>
-
+      {/* Search Field */}
+      <div className="relative w-full max-w-xs mb-6">
+        <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+        <input
+          type="text"
+          placeholder="Search by name, description, or ID..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          className="w-full pl-10 pr-8 py-2 border rounded-xl focus:ring focus:ring-blue-300 focus:outline-none text-sm"
+        />
+        {searchText && (
+          <button
+            onClick={() => setSearchText("")}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            <FaTimes />
+          </button>
+        )}
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {variants?.map((variant) => (
           <div
@@ -123,7 +143,7 @@ const handleModalSubmit = async (formData) => {
             <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
               <img
                 src={
-                  variant.imageURL || "../assets/images/placeholderDress.jpg"
+                  variant.product.imageURL || "../assets/images/placeholderDress.jpg"
                 }
                 alt={variant.product?.productName || "Variant"}
                 onError={(e) =>

@@ -65,7 +65,7 @@ const Checkout = () => {
 
   const resolvedCustomerId = isCustomer ? userData?.customerId : customerId;
 
-  console.log(resolvedCustomerId);
+  console.log("resolved" + resolvedCustomerId);
 
   // Fetch loyalty info
   const { data: customerData, isLoading: customerLoading } =
@@ -123,6 +123,7 @@ const Checkout = () => {
     quantity: item.qty,
     unitPrice: item.price,
   }));
+// console.log("Cart:", JSON.stringify(cartItems, null, 2)); 
 
   const subtotal = useMemo(
     () => cartItems.reduce((acc, item) => acc + item.qty * item.price, 0),
@@ -178,6 +179,7 @@ const Checkout = () => {
       pointsSpent,
       productList,
     };
+console.log("Payload:", JSON.stringify(salePayload, null, 2)); 
 
     if (deliveryOption === "delivery" && !selectedAddressId) {
       return toast.error("Please select a delivery address.");
@@ -244,6 +246,7 @@ const Checkout = () => {
         toast.error("You need more loyalty points to pay the full amount.");
         return;
       }
+
       toast.error(err?.data?.message || "Checkout failed.");
     }
   };

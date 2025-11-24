@@ -56,8 +56,7 @@ export default function Sidebar({
       ],
     },
     { to: "/catalog", label: "Catalog", icon: <FaTags /> },
-    { to: "/payment", label: "Payment", icon: <FaMoneyBillWave /> },
-    { to: "/taxrule", label: "Tax rule", icon: <FaCoins /> },
+
     { to: "/orders", label: "Orders", icon: <FaClipboardList /> },
     {
       label: "Loyalty Program",

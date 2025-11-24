@@ -85,8 +85,8 @@ const LineGraph = () => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-lg">
-      <h2 className="text-lg font-semibold mb-4">Sales Over Time</h2>
+    <div >
+  
 
       {/* Mode Selector */}
       <div className="mb-4 flex items-center gap-2">

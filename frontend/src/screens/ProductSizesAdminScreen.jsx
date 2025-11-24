@@ -217,6 +217,7 @@ const ProductSizesAdminScreen = () => {
         />
       )}
     </div>
+    
   );
 };
 
