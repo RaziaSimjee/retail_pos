@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { FaEdit, FaPlus, FaFilter  } from "react-icons/fa";
+import { FaEdit, FaPlus, FaFilter, FaTimes  } from "react-icons/fa";
 import {
   useGetAllSupplierPaymentsQuery,
   useAddSupplierPaymentMutation,

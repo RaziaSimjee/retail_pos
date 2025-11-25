@@ -23,10 +23,8 @@ import { useGetProductsCountQuery } from "../slices/productApiSlice";
 import { useGetProductVariantsQuery } from "../slices/productVariantApiSlice";
 import { useGetBrandsCountQuery } from "../slices/brandApiSlice";
 import { useGetCategoriesCountQuery } from "../slices/categoryApiSlice";
-import {
-  useGetTotalSalesQuery,
-
-} from "../slices/saleApiSlice";
+import { useGetTotalSalesQuery } from "../slices/saleApiSlice";
+import { useGetAllSalesQuery } from "../slices/saleApiSlice";
 import { useGetAllUsersQuery } from "../slices/usersApiSlice";
 import { useGetAllSuppliersQuery } from "../slices/suppliersApiSlice";
 
@@ -35,6 +33,8 @@ const Dashboard = () => {
   const [fromId, setFromId] = useState(1);
   const [toId, setToId] = useState(1000);
   const [downloadAll, setDownloadAll] = useState(false);
+  const [chartYear, setChartYear] = useState(new Date().getFullYear());
+  const [chartMonth, setChartMonth] = useState(new Date().getMonth() + 1);
 
   // Determine actual from/to ids based on "Download All"
   const queryFromId = downloadAll ? 1 : fromId;
@@ -57,7 +57,7 @@ const Dashboard = () => {
   const { data: suppliersData, isLoading: suppliersLoading } =
     useGetAllSuppliersQuery();
 
-
+  const { data: salesData, isLoading: allSalesLoading } = useGetAllSalesQuery();
 
   // Show loading indicator until all data is ready
   const isLoading =
@@ -92,8 +92,6 @@ const Dashboard = () => {
   // Count suppliers
   const supplierCount = suppliersData?.suppliers?.length ?? 0;
 
-
-
   const handleDownload = async () => {
     try {
       const response = await fetch(
@@ -126,7 +124,7 @@ const Dashboard = () => {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-            {/* Download Excel Form */}
+      {/* Download Excel Form */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Export Sales Data</h2>
         <div className="flex items-center gap-2 mb-4">
@@ -227,37 +225,67 @@ const Dashboard = () => {
         />
       </div>
 
+      {/* Charts Section */}
+      <div className="space-y-6">
+        {/* Weekly Sales */}
+        <div className="w-full max-w-4xl mx-auto bg-white p-4 rounded-2xl shadow-lg">
+          <h2 className="text-lg font-semibold mb-4">Weekly Sales</h2>
 
+          {/* Inputs for dynamic year & month */}
+          <div className="flex gap-4 mb-4 items-center">
+            <label className="flex flex-col text-sm font-medium">
+              Year
+              <input
+                type="number"
+                min={2000}
+                max={2100}
+                value={chartYear}
+                onChange={(e) => setChartYear(Number(e.target.value))}
+                placeholder="Year"
+                className="border p-1 rounded w-24"
+              />
+            </label>
 
-      {/* Charts */}
+            <label className="flex flex-col text-sm font-medium">
+              Month
+              <input
+                type="number"
+                min={1}
+                max={12}
+                value={chartMonth}
+                onChange={(e) => setChartMonth(Number(e.target.value))}
+                placeholder="Month"
+                className="border p-1 rounded w-24"
+              />
+            </label>
+          </div>
 
+          <BarChart year={chartYear} month={chartMonth} />
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
+        {/* Customer Sales Chart */}
+        <div className="w-full max-w-4xl mx-auto bg-white p-4 rounded-2xl shadow-lg">
+          <CustomerSalesChart />
+        </div>
+        {/* Sales Over Years */}
+        <div className="w-full max-w-4xl mx-auto bg-white p-4 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4">Sales Over Years</h2>
           <LineGraph />
         </div>
+        {/* Sales by Product */}
+        <div
+          className="w-full max-w-4xl mx-auto bg-white p-10 pt-20 rounded-2xl shadow-lg"
+          style={{ height: "400px" }}
+        >
+          <h2 className="text-lg font-semibold mb-4">Sales by Product</h2>
+          <PieChart sales={salesData || []} />
+        </div>
 
-        <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
+        {/* Individual Sale Totals */}
+        <div className="w-full max-w-4xl mx-auto bg-white p-4 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4">Individual Sale Totals</h2>
           <ScatterPlot />
         </div>
-
-        {/* Customer Sales Chart full width */}
-        <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
-          <CustomerSalesChart />
-        </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4">Weekly Sales</h2>
-          <BarChart year={2025} month={10} />
-        </div>
-
-        <div className="w-full bg-white p-4 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4">Sales by Product</h2>
-          <PieChart productIds={[22]} />
-        </div>
-      </div>
       </div>
     </div>
   );

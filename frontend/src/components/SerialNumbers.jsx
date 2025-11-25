@@ -16,7 +16,7 @@ import {
 
 const SerialNumbers = () => {
   // Pagination state
-  const [pagination, setPagination] = useState({ skip: 0, take: 100 });
+  const [pagination, setPagination] = useState({ skip: 0, take: 10 });
 
   // Fetch serial numbers
   const {

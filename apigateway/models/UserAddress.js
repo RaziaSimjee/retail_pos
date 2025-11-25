@@ -4,11 +4,11 @@ const UserAddressSchema = new mongoose.Schema({
   userID: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false
   },
   supplierID: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Supplier', // placeholder if you add suppliers later
+    ref: 'Supplier', 
   },
   country: {
     type: String,

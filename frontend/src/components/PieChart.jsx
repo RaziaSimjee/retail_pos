@@ -1,51 +1,60 @@
 // components/PieChart.jsx
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { useGetProductSalesQuery } from "../slices/saleApiSlice";
+import { useMemo } from "react";
 
+// Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const PieChart = ({ productIds }) => {
-  const { data, isLoading } = useGetProductSalesQuery({ productId: productIds[0], skip: 0, take: 100 });
+const generateColors = (num) => {
+  const colors = [];
+  for (let i = 0; i < num; i++) {
+    const hue = Math.floor(Math.random() * 360);
+    colors.push(`hsl(${hue}, 70%, 70%)`);
+  }
+  return colors;
+};
 
-  if (isLoading) return <p>Loading...</p>;
+const PieChart = ({ sales }) => {
+  if (!sales || sales.length === 0) return <p>No sales data available</p>;
 
-  // Extract quantities and labels
-  const quantities = data.map((sale) => sale.productList[0].quantity);
-  const labels = data.map((sale) => sale.productList[0].productName);
+  // Flatten all products from sales
+  const allProducts = sales.flatMap((sale) => sale.productList);
 
-  // Calculate total for percentages
-  const total = quantities.reduce((sum, qty) => sum + qty, 0);
+  // Aggregate quantity by productName
+  const productMap = {};
+  allProducts.forEach((p) => {
+    productMap[p.productName] = (productMap[p.productName] || 0) + p.quantity;
+  });
 
-  const chartData = {
+  const labels = Object.keys(productMap);
+  const data = Object.values(productMap);
+  const backgroundColor = generateColors(labels.length);
+
+  const chartData = useMemo(() => ({
     labels,
     datasets: [
       {
-        label: "Sales Count",
-        data: quantities,
-        backgroundColor: ["#3b82f6", "#f87171", "#34d399", "#fbbf24"],
+        label: "Quantity Sold",
+        data,
+        backgroundColor,
       },
     ],
-  };
+  }), [labels.join(','), data.join(',')]);
 
   const options = {
     plugins: {
+      legend: { position: "bottom" },
       tooltip: {
         callbacks: {
-          label: function (context) {
-            const value = context.raw;
-            const percentage = ((value / total) * 100).toFixed(2) + "%";
-            return `${context.label}: ${value} (${percentage})`;
-          },
+          label: (ctx) => `${ctx.label}: ${ctx.raw}`,
         },
       },
-      legend: {
-        position: "bottom",
-      },
     },
+    maintainAspectRatio: false,
   };
 
-  return <Pie data={chartData} options={options} />;
+  return <Pie data={chartData} options={options} redraw />;
 };
 
 export default PieChart;
