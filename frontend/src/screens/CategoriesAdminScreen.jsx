@@ -15,9 +15,12 @@ const CategoriesAdminScreen = () => {
   const [modalMode, setModalMode] = useState(null); // "add" | "edit" | null
   const [currentCategory, setCurrentCategory] = useState(null);
 
-  const { data = [], isLoading, isError, refetch } = useGetCategoriesQuery(
-    pagination
-  );
+  const {
+    data = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useGetCategoriesQuery(pagination);
   const [deleteCategory, { isLoading: isDeleting }] =
     useDeleteCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] =
@@ -123,7 +126,9 @@ const CategoriesAdminScreen = () => {
       {/* Category Cards */}
       <div className="flex flex-wrap justify-start gap-6">
         {filteredCategories.length === 0 ? (
-          <p className="text-gray-500 w-full text-center">No categories found.</p>
+          <p className="text-gray-500 w-full text-center">
+            No categories found.
+          </p>
         ) : (
           filteredCategories.map((category) => (
             <div
@@ -133,10 +138,14 @@ const CategoriesAdminScreen = () => {
             >
               <div className="w-full h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
                 <img
-                  src={category.imageURL || "https://via.placeholder.com/300x200"}
+                  src={
+                    category.imageURL || "https://via.placeholder.com/300x200"
+                  }
                   alt={category.categoryName}
                   onError={(e) => {
-                    if (e.target.src !== "https://via.placeholder.com/300x200") {
+                    if (
+                      e.target.src !== "https://via.placeholder.com/300x200"
+                    ) {
                       e.target.src = "https://via.placeholder.com/300x200";
                     }
                   }}

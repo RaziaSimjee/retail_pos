@@ -1,4 +1,3 @@
-// models/Sale.js
 import mongoose from "mongoose";
 
 const saleProductSchema = new mongoose.Schema({

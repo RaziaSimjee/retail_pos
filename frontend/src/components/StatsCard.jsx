@@ -1,10 +1,6 @@
 // components/StatsCard.jsx
 import { Card, CardBody, Typography } from "@material-tailwind/react";
 
-// Props:
-// title: string - title of the stat
-// value: string | number - value to display
-// Icon: React component - icon from @heroicons/react or similar
 const StatsCard = ({ title, value, Icon }) => {
   return (
     <Card className="w-full max-w-xs shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-2xl">

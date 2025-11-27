@@ -6,7 +6,7 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 export default function ForgotPasswordScreen() {
     const navigate = useNavigate();
-  const [forgotStep, setForgotStep] = useState(1); // 1: email, 2: code + new password
+  const [forgotStep, setForgotStep] = useState(1); 
   const [data, setData] = useState({ email: "", resetCode: "", newPassword: "", confirmPassword: "" });
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

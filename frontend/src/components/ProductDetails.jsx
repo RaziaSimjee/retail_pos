@@ -89,15 +89,7 @@ const ProductDetails = () => {
         </p>
       </div>
 
-      {/* Back Button */}
-      {/* <div className="mt-6">
-        <Link
-          to="/products"
-          className="px-5 py-2 bg-blue-600 text-white text-base rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-        >
-          ⬅ Back to Products
-        </Link>
-      </div> */}
+
     </div>
   );
 };

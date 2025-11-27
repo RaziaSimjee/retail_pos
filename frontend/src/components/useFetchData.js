@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 const useFetchData = () => {
   const [data, setData] = useState({
@@ -20,11 +20,11 @@ const useFetchData = () => {
           salesByBrandRes,
           inventoryDataRes,
         ] = await Promise.all([
-          fetch('/sales/total'),
-          fetch('/sales/category'),
-          fetch('/sales/item'),
-          fetch('/sales/brand'),
-          fetch('/inventory/data'),
+          fetch("/sales/total"),
+          fetch("/sales/category"),
+          fetch("/sales/item"),
+          fetch("/sales/brand"),
+          fetch("/inventory/data"),
         ]);
 
         const [
@@ -49,7 +49,7 @@ const useFetchData = () => {
           inventoryData,
         });
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }

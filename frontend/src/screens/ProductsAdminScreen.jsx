@@ -21,9 +21,17 @@ const ProductsAdminScreen = () => {
   const [modalMode, setModalMode] = useState(null);
   const [currentProduct, setCurrentProduct] = useState(null);
 
-  const { data = [], isLoading, isError, refetch } = useGetProductsQuery(pagination);
+  const {
+    data = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useGetProductsQuery(pagination);
 
-  const { data: categories = [] } = useGetCategoriesQuery({ skip: 0, take: 100 });
+  const { data: categories = [] } = useGetCategoriesQuery({
+    skip: 0,
+    take: 100,
+  });
   const { data: brands = [] } = useGetBrandsQuery({ skip: 0, take: 100 });
 
   const [deleteProduct] = useDeleteProductMutation();
@@ -39,7 +47,8 @@ const ProductsAdminScreen = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    if (!window.confirm("Are you sure you want to delete this product?"))
+      return;
 
     try {
       await deleteProduct({ id }).unwrap();
@@ -66,7 +75,10 @@ const ProductsAdminScreen = () => {
         await createProduct(formData).unwrap();
         alert("Product created successfully!");
       } else {
-        await updateProduct({ id: currentProduct.productID, ...formData }).unwrap();
+        await updateProduct({
+          id: currentProduct.productID,
+          ...formData,
+        }).unwrap();
         alert("Product updated successfully!");
       }
       refetch();
@@ -96,9 +108,13 @@ const ProductsAdminScreen = () => {
   }, [data, searchText, selectedBrand, selectedCategory]);
 
   if (isLoading)
-    return <p className="text-center mt-4 text-gray-400">Loading products...</p>;
+    return (
+      <p className="text-center mt-4 text-gray-400">Loading products...</p>
+    );
   if (isError)
-    return <p className="text-center mt-4 text-red-500">Failed to load products</p>;
+    return (
+      <p className="text-center mt-4 text-red-500">Failed to load products</p>
+    );
 
   return (
     <div className="relative p-6 bg-gray-50 min-h-screen">
@@ -108,7 +124,6 @@ const ProductsAdminScreen = () => {
 
       {/* 🔽 FILTER BAR */}
       <div className="flex flex-wrap gap-4 mb-6">
-
         {/* 🔍 Search */}
         <div className="relative w-full max-w-xs">
           <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
@@ -171,9 +186,13 @@ const ProductsAdminScreen = () => {
             >
               <div className="w-full h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
                 <img
-                  src={product.imageURL || "../assets/images/placeholderDress.jpg"}
+                  src={
+                    product.imageURL || "../assets/images/placeholderDress.jpg"
+                  }
                   alt={product.productName}
-                  onError={(e) => (e.target.src = "../assets/images/placeholderDress.jpg")}
+                  onError={(e) =>
+                    (e.target.src = "../assets/images/placeholderDress.jpg")
+                  }
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -182,7 +201,9 @@ const ProductsAdminScreen = () => {
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 flex justify-between items-center">
                     <span>{product.productName}</span>
-                    <span className="text-sm text-gray-400">ID: {product.productID}</span>
+                    <span className="text-sm text-gray-400">
+                      ID: {product.productID}
+                    </span>
                   </h2>
 
                   <Link

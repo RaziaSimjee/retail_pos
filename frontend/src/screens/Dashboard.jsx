@@ -1,5 +1,5 @@
 // pages/Dashboard.jsx
-import { useState } from "react"; // <-- IMPORT useState
+import { useState } from "react";
 import {
   UserGroupIcon,
   ShoppingCartIcon,
@@ -182,7 +182,7 @@ const Dashboard = () => {
         <StatsCard
           title="Total Products"
           value={productCount ?? 0}
-          Icon={IdentificationIcon}
+          Icon={CubeIcon}
         />
         <StatsCard
           title="Total Product Variants"

@@ -15,7 +15,12 @@ const BrandsAdminScreen = () => {
   const [modalMode, setModalMode] = useState(null);
   const [currentBrand, setCurrentBrand] = useState(null);
 
-  const { data = [], isLoading, isError, refetch } = useGetBrandsQuery(pagination);
+  const {
+    data = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useGetBrandsQuery(pagination);
   const [deleteBrand, { isLoading: isDeleting }] = useDeleteBrandMutation();
   const [updateBrand, { isLoading: isUpdating }] = useUpdateBrandMutation();
   const [createBrand, { isLoading: isCreating }] = useCreateBrandMutation();
@@ -112,9 +117,7 @@ const BrandsAdminScreen = () => {
       {/* Brand Cards */}
       <div className="flex flex-wrap justify-start gap-6">
         {filteredBrands.length === 0 ? (
-          <p className="text-gray-500 w-full text-center">
-            No brands found.
-          </p>
+          <p className="text-gray-500 w-full text-center">No brands found.</p>
         ) : (
           filteredBrands.map((brand) => (
             <div
@@ -127,7 +130,9 @@ const BrandsAdminScreen = () => {
                   src={brand.imageURL || "https://via.placeholder.com/300x200"}
                   alt={brand.brandName}
                   onError={(e) => {
-                    if (e.target.src !== "https://via.placeholder.com/300x200") {
+                    if (
+                      e.target.src !== "https://via.placeholder.com/300x200"
+                    ) {
                       e.target.src = "https://via.placeholder.com/300x200";
                     }
                   }}

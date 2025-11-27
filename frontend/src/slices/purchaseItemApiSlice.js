@@ -1,4 +1,3 @@
-// ../slices/purchaseItemApiSlice.js
 import { apiSlice } from "./apiSlice";
 import { API_GATEWAY_URL } from "../constants";
 

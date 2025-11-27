@@ -1,4 +1,3 @@
-// src/pages/Wallets.jsx
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { FaEdit, FaTrash, FaPlus, FaFilter } from "react-icons/fa";

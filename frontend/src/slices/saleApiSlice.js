@@ -148,7 +148,7 @@ exportSales: builder.query({
     method: "GET",
     // Tell RTK Query to handle binary data
     responseHandler: async (response) => {
-      const blob = await response.blob(); // get binary file
+      const blob = await response.blob(); 
       return blob;
     },
   }),

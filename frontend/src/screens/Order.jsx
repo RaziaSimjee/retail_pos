@@ -201,7 +201,7 @@ const Order = () => {
         <select
           value={orderStatusFilter}
           onChange={(e) => setOrderStatusFilter(e.target.value)}
-          className="border rounded-xl px-3 py-2 text-sm h-10" // <-- h-10 to match search height
+          className="border rounded-xl px-3 py-2 focus:ring focus:ring-blue-300  text-sm h-10" 
         >
           <option value="">All Order Status</option>
           <option value="pending">Pending</option>
@@ -212,7 +212,7 @@ const Order = () => {
         <select
           value={paymentStatusFilter}
           onChange={(e) => setPaymentStatusFilter(e.target.value)}
-          className="border rounded-xl px-3 py-2 text-sm h-10" // <-- h-10 to match search height
+          className="border rounded-xl px-3 py-2 focus:ring focus:ring-blue-300  text-sm h-10" 
         >
           <option value="">All Payment Status</option>
           <option value="pending">Pending</option>

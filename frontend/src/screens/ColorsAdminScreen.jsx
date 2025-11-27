@@ -12,12 +12,15 @@ import { FaFilter, FaTimes } from "react-icons/fa";
 const ColorsAdminScreen = () => {
   const [pagination, setPagination] = useState({ skip: 0, take: 8 });
   const [searchText, setSearchText] = useState("");
-  const [modalMode, setModalMode] = useState(null); // "add" | "edit" | null
+  const [modalMode, setModalMode] = useState(null);
   const [currentColor, setCurrentColor] = useState(null);
 
-  const { data = [], isLoading, isError, refetch } = useGetColorsQuery(
-    pagination
-  );
+  const {
+    data = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useGetColorsQuery(pagination);
 
   const [deleteColor, { isLoading: isDeleting }] = useDeleteColorMutation();
   const [updateColor, { isLoading: isUpdating }] = useUpdateColorMutation();
@@ -85,7 +88,9 @@ const ColorsAdminScreen = () => {
   if (isLoading)
     return <p className="text-center mt-4 text-gray-400">Loading colors...</p>;
   if (isError)
-    return <p className="text-center mt-4 text-red-500">Failed to load colors</p>;
+    return (
+      <p className="text-center mt-4 text-red-500">Failed to load colors</p>
+    );
 
   return (
     <div className="relative p-6 bg-gray-50 min-h-screen">
@@ -129,7 +134,9 @@ const ColorsAdminScreen = () => {
                   src={color.imageURL || "https://via.placeholder.com/300x200"}
                   alt={color.colorName}
                   onError={(e) => {
-                    if (e.target.src !== "https://via.placeholder.com/300x200") {
+                    if (
+                      e.target.src !== "https://via.placeholder.com/300x200"
+                    ) {
                       e.target.src = "https://via.placeholder.com/300x200";
                     }
                   }}

@@ -10,7 +10,7 @@ import ProductSizeModal from "../components/ProductSizeModal.jsx";
 import { FaFilter, FaTimes } from "react-icons/fa";
 
 const ProductSizesAdminScreen = () => {
-  const [pagination, setPagination] = useState({ skip: 0, take: 8 });
+  const [pagination, setPagination] = useState({ skip: 0, take: 3 });
   const [searchText, setSearchText] = useState("");
   const [modalMode, setModalMode] = useState(null);
   const [currentSize, setCurrentSize] = useState(null);

@@ -217,7 +217,7 @@ const Catalog = () => {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full border rounded-xl px-3 py-2 text-sm"
+            className="w-full border rounded-xl px-3 focus:ring focus:ring-blue-300 py-2 text-sm"
           >
             <option value="">All Categories</option>
             {categoryOptions.map((cat) => (

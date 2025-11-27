@@ -49,7 +49,10 @@ export default function AddressesScreen() {
       };
 
       if (selectedAddress) {
-        await updateAddress({ id: selectedAddress.addressID, ...payload }).unwrap();
+        await updateAddress({
+          id: selectedAddress.addressID,
+          ...payload,
+        }).unwrap();
         toast.success("Address updated successfully");
       } else {
         await addAddress(payload).unwrap();

@@ -57,8 +57,10 @@ export default function Spendings() {
     description: "",
   });
 
-  const [createSpending, { isLoading: isCreating }] = useCreateLoyaltySpendingMutation();
-  const [updateSpending, { isLoading: isUpdating }] = useUpdateLoyaltySpendingMutation();
+  const [createSpending, { isLoading: isCreating }] =
+    useCreateLoyaltySpendingMutation();
+  const [updateSpending, { isLoading: isUpdating }] =
+    useUpdateLoyaltySpendingMutation();
   const [deleteSpending] = useDeleteLoyaltySpendingMutation();
 
   // --- Fetch spendings for selected wallet ---
@@ -284,20 +286,20 @@ export default function Spendings() {
           </div>
 
           <div className="flex gap-2 mt-4">
-<button
-  type="submit"
-  className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-  disabled={isCreating || isUpdating} // disable while loading
->
-  <FaPlus />
-  {editingSpending
-    ? isUpdating
-      ? "Updating..."
-      : "Update Spending"
-    : isCreating
-    ? "Adding..."
-    : "Add Spending"}
-</button>
+            <button
+              type="submit"
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              disabled={isCreating || isUpdating} // disable while loading
+            >
+              <FaPlus />
+              {editingSpending
+                ? isUpdating
+                  ? "Updating..."
+                  : "Update Spending"
+                : isCreating
+                ? "Adding..."
+                : "Add Spending"}
+            </button>
 
             <button
               type="button"

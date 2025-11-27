@@ -72,7 +72,7 @@ export const deleteUserAddress = async (req, res) => {
       return res.status(404).json({ message: "Address not found" });
     }
 
-    await UserAddress.findByIdAndDelete(req.params.id); // ✅ simpler
+    await UserAddress.findByIdAndDelete(req.params.id); 
     res.json({ message: "Address deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });

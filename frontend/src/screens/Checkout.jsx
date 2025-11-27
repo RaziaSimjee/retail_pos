@@ -123,7 +123,7 @@ const Checkout = () => {
     quantity: item.qty,
     unitPrice: item.price,
   }));
-// console.log("Cart:", JSON.stringify(cartItems, null, 2)); 
+  // console.log("Cart:", JSON.stringify(cartItems, null, 2));
 
   const subtotal = useMemo(
     () => cartItems.reduce((acc, item) => acc + item.qty * item.price, 0),
@@ -179,7 +179,7 @@ const Checkout = () => {
       pointsSpent,
       productList,
     };
-console.log("Payload:", JSON.stringify(salePayload, null, 2)); 
+    console.log("Payload:", JSON.stringify(salePayload, null, 2));
 
     if (deliveryOption === "delivery" && !selectedAddressId) {
       return toast.error("Please select a delivery address.");

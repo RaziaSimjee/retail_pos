@@ -14,19 +14,26 @@ import { useGetAllUsersQuery } from "../slices/usersApiSlice";
 import { useGetTotalSalesByCustomerQuery } from "../slices/saleApiSlice";
 import { skipToken } from "@reduxjs/toolkit/query/react";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const CustomerSalesChart = () => {
   const { data: usersData, isLoading: usersLoading } = useGetAllUsersQuery();
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
   // Filter only customers
-  const customers = usersData?.users?.filter((u) => u.userRole === "customer") ?? [];
+  const customers =
+    usersData?.users?.filter((u) => u.userRole === "customer") ?? [];
 
   // Fetch selected customer total sales
-  const { data: salesData, isLoading: salesLoading } = useGetTotalSalesByCustomerQuery(
-    selectedCustomerId ?? skipToken
-  );
+  const { data: salesData, isLoading: salesLoading } =
+    useGetTotalSalesByCustomerQuery(selectedCustomerId ?? skipToken);
 
   useEffect(() => {
     if (customers.length > 0 && !selectedCustomerId) {
@@ -70,11 +77,9 @@ const CustomerSalesChart = () => {
   };
 
   return (
-    <div >
-
-
+    <div>
       {/* Customer Dropdown */}
- 
+
       <div className="flex items-center gap-3 mb-4">
         <label className="font-medium text-gray-700 text-sm">Customer:</label>
         <select

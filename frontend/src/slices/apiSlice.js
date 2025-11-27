@@ -8,7 +8,7 @@ const baseQuery = fetchBaseQuery({
   prepareHeaders: (headers) => {
     // Get JWT from localStorage auth slice
     const storedUser = JSON.parse(localStorage.getItem('userInfo'));
-    const token = storedUser?.token; // Make sure your userInfo object has a 'token' field
+    const token = storedUser?.token; 
 
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
